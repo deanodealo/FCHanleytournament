@@ -1,0 +1,97 @@
+/* ====== Admin Page – Original Simple Styling ====== */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+  }
+  
+  section {
+    margin-bottom: 20px;
+  }
+  
+  label {
+    display: block;
+    margin: 10px 0 5px;
+    color: #333;
+  }
+  
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  button {
+    background-color: #2a28a7;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #218838;
+  }
+  
+  /* Reset button styling */
+  #reset-btn {
+    background-color: #d9534f;
+  }
+  
+  #reset-btn:hover {
+    background-color: #c9302c;
+  }
+  .control-group {
+    background-color: #f8f8f8;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .control-group h2 {
+    margin-top: 0;
+    color: #444;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .edit-btn {
+    font-size: 12px;        /* Smaller font size */
+    padding: 4px 8px;       /* Smaller padding */
+    margin-left: 5px;       /* Slight space between text and button */
+    cursor: pointer;       /* Pointer cursor on hover */
+    border: 1px solid #ccc; /* Border for the button */
+    border-radius: 5px;     /* Rounded corners */
+    background-color: #2a28a7; /* Light background */
+    width: auto;            /* Allow the button to shrink or expand based on content */
+    max-width: 80px;        /* Set a maximum width */
+  }
+  
+  .edit-btn:hover {
+    background-color: #218838; /* Slight change on hover */
+  }
+  
+  
+  

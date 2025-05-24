@@ -1,0 +1,131 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: url('images/background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+  }
+  
+  .page-header {
+    text-align: center;
+    padding: 30px 10px 10px;
+  }
+  
+  .club-badge {
+    width: 140px;
+    height: auto;
+  }
+  
+  /* Section styling */
+  .stage {
+    background-color: rgba(0, 0, 50, 0.7);
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  
+  .stage h2 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    color: #f0f8ff;
+  }
+  
+  /* Match blocks */
+  .match {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  /* Team input */
+  .team-input {
+    width: 350px;
+    max-width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    text-align: center;
+  }
+  
+  /* Score input */
+  .score-input {
+    width: 50px;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    text-align: center;
+  }
+  
+  /* VS text */
+  .vs {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd700;
+  }
+  .celebrate-btn {
+    display: block;
+    margin: 20px auto 0;
+    padding: 12px 24px;
+    font-size: 18px;
+    background-color: #ffd700;
+    border: none;
+    border-radius: 10px;
+    color: #003366;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .celebrate-btn:hover {
+    background-color: #ffea70;
+  }
+  .winner-banner {
+    background-color: rgba(255, 215, 0, 0.95);
+    color: #003366;
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+    margin: 40px auto;
+    border-radius: 20px;
+    max-width: 600px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    animation: popIn 1s ease forwards;
+  }
+  
+  @keyframes popIn {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .declare-winner-btn {
+    background-color: #007BFF;  /* Blue color matching homepage theme */
+    color: white;
+    font-size: 18px;
+    padding: 12px 50px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .declare-winner-btn:hover {
+    background-color: #0056b3;  /* Darker blue when hovered */
+  }
+  
+  .declare-winner-btn:disabled {
+    background-color: #CCCCCC;  /* Disabled button color */
+    cursor: not-allowed;
+  }
+  
