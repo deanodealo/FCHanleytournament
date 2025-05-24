@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Knockout Stage</title>
+  <link rel="stylesheet" href="knockout.css">
+</head>
+<body>
+  <header class="page-header">
+    <img src="images/HanleyBadge.png" alt="FC Hanley Badge" class="club-badge">
+  </header>
+
+  <main>
+    <!-- U7 Semi Finals -->
+    <section class="stage semi-finals" id="u7-semi-finals">
+      <h3>U7 Semi Finals</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team A">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team B">
+      </div>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team C">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team D">
+      </div>
+    </section>
+
+    <!-- U8 Semi Finals -->
+    <section class="stage semi-finals" id="u8-semi-finals">
+      <h3>U8 Semi Finals</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team A">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team B">
+      </div>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team C">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team D">
+      </div>
+    </section>
+
+    <!-- U7 Final -->
+    <section class="stage final" id="u7-final">
+      <h3>U7 Final</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Winner SF1">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Winner SF2">
+      </div>
+      <button class="declare-winner-btn" data-age="u7">Declare Winner</button>
+      <div id="u7-winner-banner" class="winner-banner" style="display: none;">
+        🏆 <span id="u7-winner-name">Team Name</span> are the Champions! 🏆
+      </div>
+    </section>
+
+    <!-- U8 Final -->
+    <section class="stage final" id="u8-final">
+      <h3>U8 Final</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Winner SF1">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Winner SF2">
+      </div>
+      <button class="declare-winner-btn" data-age="u8">Declare Winner</button>
+      <div id="u8-winner-banner" class="winner-banner" style="display: none;">
+        🏆 <span id="u8-winner-name">Team Name</span> are the Champions! 🏆
+      </div>
+    </section>
+
+    <!-- U9 Semi Finals -->
+    <section class="stage semi-finals" id="u9-semi-finals">
+      <h3>U9 Semi Finals</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team A">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team B">
+      </div>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team C">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team D">
+      </div>
+    </section>
+
+    <!-- U10 Semi Finals -->
+    <section class="stage semi-finals" id="u10-semi-finals">
+      <h3>U10 Semi Finals</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team A">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team B">
+      </div>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Team C">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Team D">
+      </div>
+    </section>
+
+
+    <!-- U9 Final -->
+    <section class="stage final" id="u9-final">
+      <h3>U9 Final</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Winner SF1">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Winner SF2">
+      </div>
+      <button class="declare-winner-btn" data-age="u9">Declare Winner</button>
+      <div id="u9-winner-banner" class="winner-banner" style="display: none;">
+        🏆 <span id="u9-winner-name">Team Name</span> are the Champions! 🏆
+      </div>
+    </section>
+
+    <!-- U10 Final -->
+    <section class="stage final" id="u10-final">
+      <h3>U10 Final</h3>
+      <div class="match">
+        <input type="text" class="team-input" placeholder="Winner SF1">
+        <input type="number" class="score-input" min="0">
+        <span class="vs">vs</span>
+        <input type="number" class="score-input" min="0">
+        <input type="text" class="team-input" placeholder="Winner SF2">
+      </div>
+      <button class="declare-winner-btn" data-age="u10">Declare Winner</button>
+      <div id="u10-winner-banner" class="winner-banner" style="display: none;">
+        🏆 <span id="u10-winner-name">Team Name</span> are the Champions! 🏆
+      </div>
+    </section>
+
+    <button id="stop-confetti-btn">Stop Confetti</button>
+  </main>
+
+  <script src="confetti.browser.min.js"></script>
+  <script src="knockout.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
