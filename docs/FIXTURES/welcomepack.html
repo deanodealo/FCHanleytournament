@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <title>FC Hanley Welcome Pack</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,20 +19,19 @@
       max-width: 800px;
       margin: auto;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      /* Ensure height auto for PDF rendering */
       height: auto;
       overflow: visible;
     }
     h1, h2, h3 {
       color: #1c3e70;
-      page-break-after: avoid; /* Avoid page breaks after headers */
-      page-break-inside: avoid; /* Avoid breaks inside headers */
+      page-break-after: avoid;
+      page-break-inside: avoid;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
-      page-break-inside: avoid; /* Prevent table splitting */
+      page-break-inside: avoid;
     }
     th, td {
       border: 1px solid #ccc;
@@ -55,14 +56,24 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    #teamSelect {
+    select {
       margin-bottom: 1rem;
+      margin-right: 1rem;
     }
   </style>
 </head>
 <body>
 
   <h1>FC Hanley Welcome Pack Generator</h1>
+
+  <label for="ageGroupSelect">Select age group:</label>
+  <select id="ageGroupSelect" onchange="loadFixtures()">
+    <option value="">--Choose an age group--</option>
+    <option value="U7">U7</option>
+    <option value="U8">U8</option>
+    <option value="U9">U9</option>
+    <option value="U10">U10</option>
+  </select>
 
   <label for="teamSelect">Select your team:</label>
   <select id="teamSelect" onchange="generatePack()">
@@ -73,20 +84,54 @@
   <button id="downloadBtn" onclick="downloadPDF()">Download as PDF</button>
 
   <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDXXX-LMkY4Q0oN0M9e5wLdVhANzL8ifHs",
+  authDomain: "fchanley-8d910.firebaseapp.com",
+  databaseURL: "https://fchanley-8d910-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "fchanley-8d910",
+  storageBucket: "fchanley-8d910.firebasestorage.app",
+  messagingSenderId: "384977183977",
+  appId: "1:384977183977:web:7805c8ba7e9122b883bc78",
+  measurementId: "G-1CBV4NK83L"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     let fixtures = [];
 
-    // Load fixture data from localStorage
     function loadFixtures() {
-      const rawData = localStorage.getItem("tournamentFixtures");
-      if (rawData) {
-        fixtures = JSON.parse(rawData);
-        populateTeamDropdown();
-      } else {
-        alert("No fixture data found in localStorage.");
+      const ageGroup = document.getElementById('ageGroupSelect').value;
+      const teamSelect = document.getElementById('teamSelect');
+      document.getElementById('pack').innerHTML = '';
+      teamSelect.innerHTML = '<option value="">--Choose a team--</option>';
+
+      if (!ageGroup) {
+        fixtures = [];
+        return;
       }
+
+      db.ref(`tournamentData/${ageGroup}/fixtures`).once('value')
+        .then(snapshot => {
+          const data = snapshot.val();
+          if (!data) {
+            alert("No fixture data found in Firebase.");
+            return;
+          }
+          fixtures = Object.values(data).map(fix => ({
+            teamA: fix.team1,
+            teamB: fix.team2,
+            time: fix.time,
+            pitch: fix.pitch,
+            ageGroup
+          }));
+          populateTeamDropdown();
+        })
+        .catch(error => {
+          console.error("Error loading fixtures:", error);
+        });
     }
 
-    // Populate the dropdown with unique team names
     function populateTeamDropdown() {
       const teams = new Set();
       fixtures.forEach(fix => {
@@ -95,6 +140,7 @@
       });
 
       const select = document.getElementById("teamSelect");
+      select.innerHTML = '<option value="">--Choose a team--</option>';
       teams.forEach(team => {
         const option = document.createElement("option");
         option.value = team;
@@ -129,7 +175,8 @@
           <h2 style="margin: 0;">Welcome, ${team}!</h2>
           <img src="HanleyBadge.png" alt="FC Hanley Logo" style="height: 150px; object-fit: contain;">
         </div>
-        <p>Thank you for joining the <strong>FC Hanley Annual 5-a-Side</strong></p>
+        <p>Thank you for joining the <strong>FC Hanley Annual 5-a-side tournament</strong></p>
+        <p>Please report to the registration marquee on arrival to check in</p>
         <p>We’re excited to have you and wish you good luck in the tournament!</p>
 
         <h3>Your Fixtures:</h3>
@@ -140,20 +187,23 @@
 
         <h3>Tournament Rules</h3>
         <ul>
-          <li>5-a-side, no max squad size</li>
+          <li>5-a-side, Max squad size as per standard league rules</li>
           <li>10 minute matches</li>
           <li>Rolling substitutions</li>
           <li>Champions League style format, 10 teams, each team will play 6 games. Top 4 qualify for Knockout stages</li>
           <li>In the event of a tie after league games, goal difference decides. If tied again, 5 penalty shootout.</li>
           <li>12.5 minute matches in the knockout stages</li>
           <li>The referee's decision is final. Please respect the match officials.</li>
+          <li>Due to the number of fixtures, the games will come thick and fast!  We have ensured no team plays more than 2 games consecutively</li>
         </ul>
 
         <h3>Event Details</h3>
         <p><strong>Date:</strong> Saturday, 6th July 2025</p>
+        <p><strong>Registration:</strong> From 08:30 with prompt 09:00 start</p>
         <p><strong>Venue:</strong> FC Hanley Potteries Park, Abbey Lane, Stoke-on-Trent, ST2 8AJ</p>
-        <p><strong>Contact:</strong> Dean Colclough – 07813 689645</p>
-        <p><strong>Details:</strong> Onsite Cafe with refreshments and hot & cold food available</p>
+        <p><strong>Free Parking</strong></p>
+        <p><strong>Details:</strong> Onsite Cafe with a great range of refreshments and hot & cold food available</p>
+        <p><strong>Contact:</strong> Kelsey Stair - 07495 051135 / Dean Colclough – 07813 689645</p>
       `;
     }
 
@@ -165,21 +215,18 @@
       }
       const team = document.getElementById('teamSelect').value;
 
-      // Use html2pdf with custom options to avoid blank space issues
       const opt = {
-        margin:       [10, 10, 10, 10], // top, left, bottom, right in mm
-        filename:     `FC_Hanley_${team}_WelcomePack.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        margin: [10, 10, 10, 10],
+        filename: `FC_Hanley_${team}_WelcomePack.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       html2pdf().set(opt).from(element).save();
     }
-
-    // Load everything on page load
-    window.onload = loadFixtures;
   </script>
+
 </body>
 </html>

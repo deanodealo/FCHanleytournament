@@ -1,6 +1,79 @@
-import { saveFixtures, loadFixtures, saveResults, loadResults, saveTeams } from './firebasehelpers.js';
-import { database } from './firebase.js';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fixture Generator Test</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  label { display: block; margin-top: 10px; }
+  #pitchAssignments > div { margin-bottom: 8px; }
+  #fixtureList div, #teamMatchLists div { margin: 3px 0; }
+  button { margin-top: 15px; }
+</style>
+</head>
+<body>
 
+<h2>Fixture Generator</h2>
+
+<label>
+  Select Age Groups (Ctrl+click multiple):
+  <select id="ageGroup" multiple size="3">
+    <option value="U7" selected>U7</option>
+    <option value="U8" selected>U8</option>
+    <option value="U9">U9</option>
+  </select>
+</label>
+
+<label>
+  Total Pitches:
+  <input type="number" id="pitches" value="5" min="1" max="10" />
+</label>
+
+<div id="pitchAssignments"></div>
+
+<label>
+  Game Length (minutes):
+  <input type="number" id="matchLength" value="10" min="5" max="60" />
+</label>
+
+<label>
+  Games per Team:
+  <input type="number" id="gamesPerTeam" value="3" min="1" max="10" />
+</label>
+
+<label>
+  <input type="checkbox" id="enableBreaks" />
+  Enable Breaks Between Games
+</label>
+
+<label>
+  Break Length (minutes):
+  <input type="number" id="breakLength" value="5" min="0" max="30" />
+</label>
+
+<label>
+  Enter Teams (one line per age group):<br/>
+  Format: AgeGroup: Team1, Team2, Team3<br/>
+  Example:<br/>
+  U7: FC Hanley Red, Stockton Villa, Team C<br/>
+  U8: Team X, Team Y, Team Z
+</label>
+<textarea id="teamNames" rows="5" cols="50">
+U7: FC Hanley Red, Stockton Villa, Team C
+U8: Team X, Team Y, Team Z
+</textarea>
+
+<button id="generateBtn">Generate Fixtures</button>
+<button id="exportBtn">Export CSV</button>
+
+<h3>Fixtures</h3>
+<div id="fixtureList"></div>
+
+<h3>Team Match Lists</h3>
+<div id="teamMatchLists"></div>
+
+<script>
 let scheduledFixtures = [];
 
 function updatePitchAssignmentUI(selectedAgeGroups, totalPitches) {
@@ -19,7 +92,7 @@ function updatePitchAssignmentUI(selectedAgeGroups, totalPitches) {
   });
 }
 
-// Generate fixtures function no longer calls updatePitchAssignmentUI
+
 function generateFixtures() {
   const ageGroupSelect = document.getElementById("ageGroup");
   const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
@@ -44,19 +117,21 @@ function generateFixtures() {
     }
   });
 
-  for (const ageGroup of selectedAgeGroups) {
-    const teams = ageGroupTeams[ageGroup];
-    if (!teams || teams.length < 2) {
-      alert(`Please enter at least 2 teams for ${ageGroup}.`);
-      return;
-    }
-    if (gamesPerTeam > teams.length - 1) {
-      alert(`Games per team for ${ageGroup} cannot exceed number of opponents.`);
-      return;
-    }
+for (const ageGroup of selectedAgeGroups) {
+  const teams = ageGroupTeams[ageGroup];
+  if (!teams || teams.length < 2) {
+    alert(`Please enter at least 2 teams for ${ageGroup}.`);
+    return;
   }
+  if (gamesPerTeam > teams.length - 1) {
+    alert(`Games per team for ${ageGroup} cannot exceed number of opponents.`);
+    return;
+  }
+}
 
-const pitchAllocations = {};
+
+  const pitchAllocations = {};
+  let usedPitches = new Set();
 
 for (const ageGroup of selectedAgeGroups) {
   const input = document.getElementById(`pitches-${ageGroup}`);
@@ -81,14 +156,19 @@ for (const ageGroup of selectedAgeGroups) {
   }
 
   for (let pitch of values) {
+    if (usedPitches.has(pitch)) {
+      alert(`Pitch ${pitch} is already assigned. Please avoid duplicates.`);
+      return;
+    }
     if (pitch < 1 || pitch > totalPitches) {
       alert(`Pitch ${pitch} is out of range (1–${totalPitches}).`);
       return;
     }
+    usedPitches.add(pitch);
   }
 
   pitchAllocations[ageGroup] = values;
-}
+} // <-- this closes the for loop
 
 
   const scheduledAll = [];
@@ -100,25 +180,18 @@ for (const ageGroup of selectedAgeGroups) {
     const fixtures = generateMatchups(teams, gamesPerTeam);
     if (fixtures.length === 0) continue;
 
-  // Use a fresh time object for each group
-  const groupStartTime = new Date();
-  groupStartTime.setHours(9, 0, 0, 0);
+    const scheduled = scheduleMatchTimes(
+      fixtures,
+      allocatedPitches.length,
+      gameLength,
+      enableBreaks,
+      breakLength,
+      allocatedPitches
+    );
 
-  console.log(`${ageGroup} allocated pitches:`, allocatedPitches);
-
-  const scheduled = scheduleMatchTimes(
-    fixtures,
-    allocatedPitches.length,
-    gameLength,
-    enableBreaks,
-    breakLength,
-    allocatedPitches,
-    groupStartTime  // <-- pass this new parameter
-  );
-
-
-    saveTeams(ageGroup, teams);
-    saveFixtures(ageGroup, scheduled);
+    // Normally you'd save to Firebase here, but skipping for this demo
+    // saveTeams(ageGroup, teams);
+    // saveFixtures(ageGroup, scheduled);
 
     scheduledAll.push({ ageGroup, scheduled, teams });
   }
@@ -126,25 +199,21 @@ for (const ageGroup of selectedAgeGroups) {
   document.getElementById("fixtureList").innerHTML = "";
   document.getElementById("teamMatchLists").innerHTML = "";
 
-  for (const { ageGroup, scheduled, teams } of scheduledAll) {
-    const groupHeader = document.createElement("h3");
-    groupHeader.textContent = `Fixtures for ${ageGroup}`;
-    document.getElementById("fixtureList").appendChild(groupHeader);
-    displayFixtures(scheduled);
+for (const { ageGroup, scheduled, teams } of scheduledAll) {
+  const groupHeader = document.createElement("h3");
+  groupHeader.textContent = `Fixtures for ${ageGroup}`;
+  document.getElementById("fixtureList").appendChild(groupHeader);
+  displayFixtures(scheduled);
 
-    const teamListHeader = document.createElement("h3");
-    teamListHeader.textContent = `${ageGroup} Team Schedules`;
-    document.getElementById("teamMatchLists").appendChild(teamListHeader);
-    displayTeamMatchLists(scheduled, teams);
-  }
-
-  alert("Fixtures generated and saved for all selected age groups.");
-  scheduledFixtures = scheduledAll.flatMap(g => g.scheduled);
+  const teamListHeader = document.createElement("h3");
+  teamListHeader.textContent = `${ageGroup} Team Schedules`;
+  document.getElementById("teamMatchLists").appendChild(teamListHeader);
+  displayTeamMatchLists(scheduled, teams);
 }
 
-/**
- * Round-robin partial schedule generator
- */
+alert("Fixtures generated successfully!");
+scheduledFixtures = scheduledAll.flatMap(g => g.scheduled);
+
 function generateMatchups(teams, gamesPerTeam) {
   const maxGames = teams.length - 1;
   if (gamesPerTeam > maxGames) {
@@ -159,7 +228,7 @@ function generateMatchups(teams, gamesPerTeam) {
     }
   }
 
-  // Shuffle to add randomness
+  // Shuffle allPairs
   for (let i = allPairs.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [allPairs[i], allPairs[j]] = [allPairs[j], allPairs[i]];
@@ -176,25 +245,22 @@ function generateMatchups(teams, gamesPerTeam) {
     const canUse =
       matchCounts[t1] < gamesPerTeam && matchCounts[t2] < gamesPerTeam;
 
-    // Try this match
     if (canUse) {
       selectedMatches.push([t1, t2]);
       matchCounts[t1]++;
       matchCounts[t2]++;
 
       if (selectedMatches.length === (teams.length * gamesPerTeam) / 2) {
-        return true; // done
+        return true;
       }
 
       if (backtrack(index + 1)) return true;
 
-      // Backtrack
       selectedMatches.pop();
       matchCounts[t1]--;
       matchCounts[t2]--;
     }
 
-    // Try skipping this match
     return backtrack(index + 1);
   }
 
@@ -209,94 +275,90 @@ function generateMatchups(teams, gamesPerTeam) {
 }
 
 
-
-function scheduleMatchTimes(fixtures, numPitches, gameLength, enableBreaks, breakLength, pitchArray = [], startTime = null) {
+function scheduleMatchTimes(fixtures, numPitches, gameLength, enableBreaks, breakLength, pitchArray = []) {
   const rounds = [];
   const matchesPerRound = numPitches;
   const timeIncrement = gameLength + (enableBreaks ? breakLength : 0);
 
   let unscheduled = [...fixtures];
-  let currentTime = startTime ? new Date(startTime) : new Date();
-  currentTime.setSeconds(0, 0);
+  let currentTime = new Date();
+  currentTime.setHours(9, 0, 0, 0);
 
   const lastPlayedRound = {};
-  const consecutiveMatches = {};
-  const scheduledAtTime = {};
   let roundNumber = 0;
-  let pitchIndex = 0;
+
+  const scheduledAtTime = {};
 
   while (unscheduled.length > 0) {
     const roundMatches = [];
-    const playingThisRound = new Set();
+    const playing = new Set();
     const timeKey = currentTime.toISOString();
-    if (!scheduledAtTime[timeKey]) scheduledAtTime[timeKey] = new Set();
 
-    // Recalculate available matches *inside* the round loop
-    const candidates = [...unscheduled];
+    if (!scheduledAtTime[timeKey]) {
+      scheduledAtTime[timeKey] = new Set();
+    }
 
-    for (const [t1, t2] of candidates) {
-      if (
-        playingThisRound.has(t1) || playingThisRound.has(t2) ||
-        (consecutiveMatches[t1] || 0) >= 2 || (consecutiveMatches[t2] || 0) >= 2 ||
-        (lastPlayedRound[t1] != null && roundNumber - lastPlayedRound[t1] > 4) ||
-        (lastPlayedRound[t2] != null && roundNumber - lastPlayedRound[t2] > 4)
-      ) {
-        continue;
+    const preferredMatches = [];
+    const fallbackMatches = [];
+
+    for (let i = 0; i < unscheduled.length; i++) {
+      const [t1, t2] = unscheduled[i];
+      const t1Rested = !lastPlayedRound.hasOwnProperty(t1) || lastPlayedRound[t1] < roundNumber - 1;
+      const t2Rested = !lastPlayedRound.hasOwnProperty(t2) || lastPlayedRound[t2] < roundNumber - 1;
+
+      const t1Busy = scheduledAtTime[timeKey].has(t1);
+      const t2Busy = scheduledAtTime[timeKey].has(t2);
+
+      if (!playing.has(t1) && !playing.has(t2) && !t1Busy && !t2Busy) {
+        const match = {
+          team1: t1,
+          team2: t2,
+          time: new Date(currentTime).toISOString(),
+          pitch: pitchArray.length ? pitchArray[roundMatches.length % pitchArray.length] : (roundMatches.length % numPitches) + 1,
+        };
+
+        if (t1Rested && t2Rested) {
+          preferredMatches.push({ match, index: i });
+        } else {
+          fallbackMatches.push({ match, index: i });
+        }
       }
+    }
 
-      // Prevent same team scheduled twice in one time slot
-      if (scheduledAtTime[timeKey].has(t1) || scheduledAtTime[timeKey].has(t2)) continue;
-
-      const pitch = pitchArray.length > 0
-        ? pitchArray[pitchIndex % pitchArray.length]
-        : (roundMatches.length % numPitches) + 1;
-
-      const match = {
-        team1: t1,
-        team2: t2,
-        time: new Date(currentTime).toISOString(),
-        pitch: pitch,
-      };
-
+    while (preferredMatches.length && roundMatches.length < matchesPerRound) {
+      const { match, index } = preferredMatches.shift();
       roundMatches.push(match);
-      playingThisRound.add(t1);
-      playingThisRound.add(t2);
-      scheduledAtTime[timeKey].add(t1);
-      scheduledAtTime[timeKey].add(t2);
-      lastPlayedRound[t1] = roundNumber;
-      lastPlayedRound[t2] = roundNumber;
-      consecutiveMatches[t1] = (consecutiveMatches[t1] || 0) + 1;
-      consecutiveMatches[t2] = (consecutiveMatches[t2] || 0) + 1;
-
-      // Remove scheduled match
-      unscheduled = unscheduled.filter(([a, b]) => !(a === t1 && b === t2));
-      pitchIndex++;
-
-      if (roundMatches.length >= matchesPerRound) break;
+      playing.add(match.team1);
+      playing.add(match.team2);
+      scheduledAtTime[timeKey].add(match.team1);
+      scheduledAtTime[timeKey].add(match.team2);
+      lastPlayedRound[match.team1] = roundNumber;
+      lastPlayedRound[match.team2] = roundNumber;
+      unscheduled.splice(index, 1);
+      preferredMatches.forEach(pm => { if (pm.index > index) pm.index--; });
+      fallbackMatches.forEach(fm => { if (fm.index > index) fm.index--; });
     }
 
-    // Reset consecutive match streaks for teams not playing this round
-    for (const team of Object.keys(consecutiveMatches)) {
-      if (!playingThisRound.has(team)) consecutiveMatches[team] = 0;
+    while (fallbackMatches.length && roundMatches.length < matchesPerRound) {
+      const { match, index } = fallbackMatches.shift();
+      roundMatches.push(match);
+      playing.add(match.team1);
+      playing.add(match.team2);
+      scheduledAtTime[timeKey].add(match.team1);
+      scheduledAtTime[timeKey].add(match.team2);
+      lastPlayedRound[match.team1] = roundNumber;
+      lastPlayedRound[match.team2] = roundNumber;
+      unscheduled.splice(index, 1);
+      fallbackMatches.forEach(fm => { if (fm.index > index) fm.index--; });
     }
 
-    // Only push actual matches
-    if (roundMatches.length > 0) {
-      rounds.push(...roundMatches);
-    }
-
+    rounds.push(...roundMatches);
     currentTime.setMinutes(currentTime.getMinutes() + timeIncrement);
     roundNumber++;
   }
 
   return rounds;
 }
-
-
-
-
-
-
 
 function displayFixtures(schedule) {
   const container = document.getElementById("fixtureList");
@@ -325,6 +387,7 @@ function displayTeamMatchLists(schedule, teams) {
   });
 }
 
+
 function exportCSV() {
   if (!scheduledFixtures.length) {
     alert("No fixtures to export. Please generate fixtures first.");
@@ -346,7 +409,17 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
-// Set up listeners to update pitch assignment UI when age groups change
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "fixtures.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 document.getElementById("ageGroup").addEventListener("change", () => {
   const ageGroupSelect = document.getElementById("ageGroup");
   const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
@@ -354,7 +427,6 @@ document.getElementById("ageGroup").addEventListener("change", () => {
   updatePitchAssignmentUI(selectedAgeGroups, totalPitches);
 });
 
-// Optional: update pitch inputs if total pitches number changes
 document.getElementById("pitches").addEventListener("input", () => {
   const ageGroupSelect = document.getElementById("ageGroup");
   const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
@@ -362,7 +434,6 @@ document.getElementById("pitches").addEventListener("input", () => {
   updatePitchAssignmentUI(selectedAgeGroups, totalPitches);
 });
 
-// Initialize pitch assignment inputs on page load
 window.addEventListener("DOMContentLoaded", () => {
   const ageGroupSelect = document.getElementById("ageGroup");
   const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
@@ -370,6 +441,9 @@ window.addEventListener("DOMContentLoaded", () => {
   updatePitchAssignmentUI(selectedAgeGroups, totalPitches);
 });
 
-// Generate button event
 document.getElementById('generateBtn').addEventListener('click', generateFixtures);
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
+</script>
 
+</body>
+</html>

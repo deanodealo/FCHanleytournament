@@ -1,6 +1,31 @@
+import { 
+  saveFixtures, 
+  loadFixtures, 
+  saveResults, 
+  loadResults, 
+  loadTeams  // <-- added loadTeams import
+} from './FIXTURES/firebasehelpers.js';
+import { database } from './FIXTURES/firebase.js';
+
 // ===== Constants =====
 const STORAGE_KEY = 'tournamentData';
-let tournamentData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+let tournamentData = {};  // initially empty
+
+async function loadAllDataFromFirebase() {
+  const ages = ['U7', 'U8', 'U9', 'U10'];
+  for (const age of ages) {
+    const [fixtures, results, teams] = await Promise.all([
+      loadFixtures(age),
+      loadResults(age),
+      loadTeams(age)
+    ]);
+    tournamentData[age] = {
+      fixtures: fixtures || [],
+      results: results || [],
+      teams: teams || []
+    };
+  }
+}
 
 // ===== DOM Elements =====
 const tableBody = document.querySelector('#table tbody');
@@ -30,7 +55,6 @@ function calculateLeagueTable(age) {
   ensureAgeGroupExists(age);
   const teams = tournamentData[age].teams || [];
   const results = tournamentData[age].results || [];
-  console.log("Results for league table:", results);
 
   const stats = {};
 
@@ -49,11 +73,7 @@ function calculateLeagueTable(age) {
   });
 
   results.forEach(result => {
-    if (!result.fixture) return;
-
-    const { team1, team2 } = result.fixture;
-    const score1 = result.team1Score;
-    const score2 = result.team2Score;
+    const { team1, team2, team1Score: score1, team2Score: score2 } = result;
 
     if (!stats[team1] || !stats[team2]) return;
 
@@ -92,6 +112,7 @@ function calculateLeagueTable(age) {
   return sortedTeams;
 }
 
+
 function renderLeagueTable(age) {
   const stats = calculateLeagueTable(age);
   tableBody.innerHTML = stats.length
@@ -113,8 +134,6 @@ function renderLeagueTable(age) {
     : `<tr><td colspan="7">No teams in ${age} yet.</td></tr>`;
 }
 
-// ===== Fixtures =====
-
 function renderFixtures(age) {
   ensureAgeGroupExists(age);
   const fixtures = tournamentData[age].fixtures || [];
@@ -134,31 +153,20 @@ function renderFixtures(age) {
   });
 
   fixturesList.innerHTML = unplayedFixtures.length
-    ? unplayedFixtures
-        .map(f => {
-          const formattedTime = formatISOTimeTo12Hour(f.time);
-          return `
-            <li>
-              <strong>${f.team1}</strong> vs <strong>${f.team2}</strong><br />
-              <em>Time: ${formattedTime}</em><br />
-              <em>Pitch: ${f.pitch}</em>
-            </li>
-          `;
-        })
-        .join('')
-    : '<li>No upcoming fixtures.</li>';
+  ? unplayedFixtures
+      .map(f => {
+        const formattedTime = formatISOTimeTo12Hour(f.time);
+        return `
+          <li>
+            <strong>${f.team1}</strong> - <strong>${f.team2}</strong><br/>
+            <em>Time: ${formattedTime} | Pitch: ${f.pitch}</em>
+          </li>
+        `;
+      })
+      .join('')
+  : '<li>No upcoming fixtures.</li>';
 }
 
-// Helper to convert 24-hour time string "HH:mm" to 12-hour format "h:mm AM/PM"
-function formatTime24to12(time24) {
-  const [hourStr, minute] = time24.split(":");
-  let hour = parseInt(hourStr, 10);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12; // Convert 0 to 12 for midnight
-  return `${hour}:${minute} ${ampm}`;
-}
-
-// Helper to format ISO datetime string to local time h:mm AM/PM
 function formatISOTimeTo12Hour(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -170,8 +178,6 @@ function formatISOTimeTo12Hour(isoString) {
   return `${hours}:${minutes} ${ampm}`;
 }
 
-
-// ===== Results =====
 function renderResults(age) {
   ensureAgeGroupExists(age);
   const results = tournamentData[age].results || [];
@@ -183,11 +189,13 @@ function renderResults(age) {
 
   resultsList.innerHTML = results
     .map(r => {
-      if (!r.fixture) return '';
-      const { team1, team2, time, pitch } = r.fixture;
+      if (!r.team1 || !r.team2) return '';
+
+      const { team1, team2, time, pitch, team1Score, team2Score } = r;
       const formattedTime = formatISOTimeTo12Hour(time);
+
       return `<li>
-        <strong>${team1}</strong> ${r.team1Score} - ${r.team2Score} <strong>${team2}</strong><br/>
+        <strong>${team1}</strong> ${team1Score} - ${team2Score} <strong>${team2}</strong><br/>
         <em>Time: ${formattedTime} | Pitch: ${pitch}</em>
       </li>`;
     })
@@ -195,8 +203,6 @@ function renderResults(age) {
 }
 
 
-
-// ===== Refresh Everything =====
 
 function refreshAll(age) {
   ensureAgeGroupExists(age);
@@ -218,8 +224,6 @@ function refreshAll(age) {
   renderResults(age);
   renderFixtures(age);
 }
-
-// ===== Age Group Cycling =====
 
 function cycleAgeGroups() {
   if (cycleInterval) clearInterval(cycleInterval);
@@ -264,8 +268,13 @@ autoCycleCheckbox.addEventListener('change', () => {
 
 // ===== Initial Load =====
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const initialAge = ageGroupSelect.value;
   currentAgeIndex = ageGroups.indexOf(initialAge);
+
+  // Load all data from Firebase
+  await loadAllDataFromFirebase();
+
+  // Now refresh UI with loaded data
   refreshAll(initialAge);
 });

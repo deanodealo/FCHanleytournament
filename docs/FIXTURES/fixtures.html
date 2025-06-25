@@ -26,25 +26,27 @@
 
   <div class="section">
     <label for="ageGroup">Select Age Group:</label>
-<select id="ageGroup">
+<select id="ageGroup" multiple>
   <option value="U7">U7</option>
   <option value="U8">U8</option>
   <option value="U9">U9</option>
   <option value="U10">U10</option>
-  <option value="U11">U11</option>
-</select><br>
+</select>
+<small>Hold Ctrl or Cmd to select multiple age groups</small>
     <label>Number of Pitches: <input type="number" id="pitches" min="1" value="3"></label><br>
     <label>Match Length (mins): <input type="number" id="matchLength" min="1" value="10"></label><br>
     <label>Games per Team: <input type="number" id="gamesPerTeam" min="1" value="6"></label><br>
     <label><input type="checkbox" id="enableBreaks"> Add Breaks Between Match Rounds</label><br>
     <label>Break Length (mins): <input type="number" id="breakLength" min="1" value="5"></label><br>
 
+    <div id="pitchAssignments"></div>
+
 
     <label>Enter Team Names (one per line):<br>
       <textarea id="teamNames" rows="10" cols="30" placeholder="Team A&#10;Team B&#10;Team C"></textarea>
     </label><br>
 
-    <button onclick="generateFixtures()">Generate Fixtures</button>
+    <button id="generateBtn">Generate Fixtures</button>
     <button onclick="exportCSV()">Export Fixtures to CSV</button>
   </div>
 
@@ -58,6 +60,8 @@
     <div id="teamMatchLists"></div>
   </div>
 
-  <script src="fixtures.js"></script>
+  <script type="module" src="./fixtures.js"></script>
+
+
 </body>
 </html>

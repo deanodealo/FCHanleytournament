@@ -1,3 +1,8 @@
+import { saveFixtures, loadFixtures, saveResults, loadResults } from './FIXTURES/firebasehelpers.js';
+import { database } from './FIXTURES/firebase.js';
+
+
+
 // script.js
 
 let tournamentData = JSON.parse(localStorage.getItem('tournamentData')) || {};

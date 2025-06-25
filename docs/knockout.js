@@ -17,11 +17,33 @@ function stopConfetti() {
   clearInterval(confettiInterval);
 }
 
-// Function to declare the winner and trigger confetti animation
 function celebrate(ageGroup) {
-  // Get the winner's name from the first team-input field in the final
-  const winnerInputs = document.querySelectorAll(`#${ageGroup}-final .match input.team-input`);
-  const winnerName = winnerInputs[0]?.value.trim() || "Unknown Team";
+  // Get the final match inputs
+  const finalMatch = document.querySelector(`#${ageGroup}-final .match`);
+  const teamInputs = finalMatch.querySelectorAll('input.team-input');
+  const scoreInputs = finalMatch.querySelectorAll('input.score-input');
+
+  if (teamInputs.length < 2 || scoreInputs.length < 2) {
+    alert("Missing team or score inputs.");
+    return;
+  }
+
+  const team1Name = teamInputs[0].value.trim();
+  const team2Name = teamInputs[1].value.trim();
+  const score1 = parseInt(scoreInputs[0].value.trim(), 10);
+  const score2 = parseInt(scoreInputs[1].value.trim(), 10);
+
+  let winnerName = "Unknown Team";
+
+  if (!isNaN(score1) && !isNaN(score2)) {
+    if (score1 > score2) {
+      winnerName = team1Name;
+    } else if (score2 > score1) {
+      winnerName = team2Name;
+    } else {
+      winnerName = "It's a draw!";
+    }
+  }
 
   // Update and show the winner banner
   const winnerBanner = document.querySelector(`#${ageGroup}-winner-banner`);
@@ -32,16 +54,17 @@ function celebrate(ageGroup) {
   // Start confetti animation
   startConfetti();
 
-  // Disable all inputs in the final
+  // Disable inputs
   const inputs = document.querySelectorAll(`#${ageGroup}-final input`);
   inputs.forEach(input => input.disabled = true);
 
-  // Disable the declare winner button for this age group
+  // Disable the declare winner button
   const declareWinnerButton = document.querySelector(`#${ageGroup}-final .declare-winner-btn`);
   declareWinnerButton.disabled = true;
   declareWinnerButton.style.backgroundColor = '#d3d3d3';
   declareWinnerButton.style.cursor = 'not-allowed';
 }
+
 
 // Event listener for all "Declare Winner" buttons
 document.querySelectorAll('.declare-winner-btn').forEach(button => {

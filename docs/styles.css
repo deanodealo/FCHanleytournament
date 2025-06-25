@@ -13,13 +13,27 @@
 body {
   position: relative;
   font-family: 'Roboto', sans-serif;
-  background: url('images/background.jpg') no-repeat center center fixed; /* Add your background image here */
-  background-size: cover; /* Ensure the image covers the whole viewport */
+  background: url('images/backnew.jpeg') no-repeat center center fixed;
+  background-size: cover;
   color: #fff;
   text-align: center;
   padding: 20px 0;
   line-height: 1.4;
+  overflow-x: hidden; /* just in case */
 }
+
+body::before {
+  content: "";
+  position: fixed; /* fixed so it stays during scroll */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4); /* Black overlay at 40% opacity */
+  pointer-events: none; /* so it doesn’t block clicks */
+  z-index: -1; /* behind all content */
+}
+
 
 /* ============================= */
 /*      Banner Styles            */
@@ -55,12 +69,14 @@ header {
 }
 
 .logo {
-  width: 200px;
-  height: auto;
-  margin: 0 20px;
-  position: relative;
-  z-index: 1; /* Make sure the logo stays on top */
+  width: 550px;       /* Adjust width to make image bigger */
+  height: auto;       /* Maintain aspect ratio */
+  border-radius: 15px; /* Rounded corners */
+  display: block;     /* Optional: so it behaves like a block element */
+  margin: 0 auto;     /* Optional: center the image horizontally */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: subtle shadow */
 }
+
 
 h1 {
   font-size: 3.5em;
@@ -88,55 +104,68 @@ h1 {
 /*      Table Section Styles     */
 /* ============================= */
 .league-table, .fixtures-results {
-  flex: 1 1 48%; /* Take up 48% of the width */
+  flex: 1 1 48%;
   min-width: 300px;
-  background-color: rgba(0, 0, 50, 0.7);
+  background-color: #fff; /* White background */
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* lighter shadow for subtle depth */
   margin-bottom: 20px;
 }
 
 .league-table {
-  flex: 1 1 58%; /* League Table takes a little more space */
+  flex: 1 1 58%;
 }
 
 h2 {
-  font-size: 2.5em;
-  color: #f8fafc;
-  margin-bottom: 15px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #222;
+  margin: 10px 0 15px 0;
   text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: left; /* or center */
 }
 
-/* Table */
+
+/* Table styles */
 table {
   width: 100%;
   border-collapse: collapse;
-  color: #003366;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  color: #222;
+  box-shadow: none; /* remove old shadows */
+  font-family: 'Poppins', sans-serif;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee; /* very thin light gray line */
+  font-weight: 500;
 }
 
 th {
-  background-color: #006bb3;
-  color: #ffffff;
+  background-color: #fff; /* keep header white */
+  color: #555; /* softer dark for headings */
   text-transform: uppercase;
-  padding: 12px;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  border-bottom: 2px solid #ddd; /* slightly thicker line below header */
 }
 
-td {
-  background-color: #f4f4f4;
-  color: #003366;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-tr:nth-child(even) td {
-  background-color: #e8f1fc;
+tr:last-child td {
+  border-bottom: none; /* no border after last row */
 }
 
 tr:hover td {
-  background-color: #d0e4fb;
+  background-color: #f9f9f9; /* subtle hover effect */
+  cursor: default;
 }
+
 
 table {
   border-radius: 10px;
@@ -225,3 +254,14 @@ button:hover {
   }
 }
 
+.bg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+  object-fit: cover;
+  opacity: 0.3; /* control transparency */
+}
