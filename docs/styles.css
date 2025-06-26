@@ -265,3 +265,78 @@ button:hover {
   object-fit: cover;
   opacity: 0.3; /* control transparency */
 }
+
+/* === MOBILE RESPONSIVE STYLES === */
+@media (max-width: 768px) {
+
+  body {
+    padding: 10px;
+    font-size: 14px;
+    overflow-x: hidden;
+  }
+
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .league-table,
+  .fixtures-results {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  table {
+    font-size: 12px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 6px;
+    text-align: center;
+  }
+
+  .fixtures-results h2,
+  .league-table h2 {
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .logo {
+    width: 100%;
+    height: auto;
+    max-width: 300px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .auto-cycle {
+    padding: 10px;
+    text-align: center;
+  }
+
+  .age-group-selection {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .age-group-selection label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  footer {
+    padding: 20px 10px;
+  }
+
+  ul#fixtures-list, ul#results-list {
+    padding-left: 20px;
+    font-size: 14px;
+  }
+}
