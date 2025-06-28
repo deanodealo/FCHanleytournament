@@ -93,6 +93,8 @@ for (const ageGroup of selectedAgeGroups) {
 
   const scheduledAll = [];
 
+  const globalPitchSchedule = {}; // Tracks pitch usage across all age groups
+
   for (const ageGroup of selectedAgeGroups) {
     const teams = ageGroupTeams[ageGroup];
     const allocatedPitches = pitchAllocations[ageGroup];
@@ -106,15 +108,17 @@ for (const ageGroup of selectedAgeGroups) {
 
   console.log(`${ageGroup} allocated pitches:`, allocatedPitches);
 
-  const scheduled = scheduleMatchTimes(
-    fixtures,
-    allocatedPitches.length,
-    gameLength,
-    enableBreaks,
-    breakLength,
-    allocatedPitches,
-    groupStartTime  // <-- pass this new parameter
-  );
+const scheduled = scheduleMatchTimes(
+  fixtures,
+  allocatedPitches.length,
+  gameLength,
+  enableBreaks,
+  breakLength,
+  allocatedPitches,
+  groupStartTime,
+  globalPitchSchedule // 👈 new argument
+);
+
 
 
     saveTeams(ageGroup, teams);
@@ -210,7 +214,16 @@ function generateMatchups(teams, gamesPerTeam) {
 
 
 
-function scheduleMatchTimes(fixtures, numPitches, gameLength, enableBreaks, breakLength, pitchArray = [], startTime = null) {
+function scheduleMatchTimes(
+  fixtures,
+  numPitches,
+  gameLength,
+  enableBreaks,
+  breakLength,
+  pitchArray = [],
+  startTime = null,
+  globalPitchSchedule = {}
+) {
   const rounds = [];
   const matchesPerRound = numPitches;
   const timeIncrement = gameLength + (enableBreaks ? breakLength : 0);
@@ -225,37 +238,46 @@ function scheduleMatchTimes(fixtures, numPitches, gameLength, enableBreaks, brea
   let roundNumber = 0;
   let pitchIndex = 0;
 
-  while (unscheduled.length > 0) {
+  let maxRounds = 500; // safeguard to prevent infinite loop
+
+  while (unscheduled.length > 0 && roundNumber < maxRounds) {
     const roundMatches = [];
     const playingThisRound = new Set();
     const timeKey = currentTime.toISOString();
     if (!scheduledAtTime[timeKey]) scheduledAtTime[timeKey] = new Set();
 
-    // Recalculate available matches *inside* the round loop
     const candidates = [...unscheduled];
+    let matchScheduledThisRound = false;
 
     for (const [t1, t2] of candidates) {
       if (
         playingThisRound.has(t1) || playingThisRound.has(t2) ||
         (consecutiveMatches[t1] || 0) >= 2 || (consecutiveMatches[t2] || 0) >= 2 ||
         (lastPlayedRound[t1] != null && roundNumber - lastPlayedRound[t1] > 4) ||
-        (lastPlayedRound[t2] != null && roundNumber - lastPlayedRound[t2] > 4)
+        (lastPlayedRound[t2] != null && roundNumber - lastPlayedRound[t2] > 4) ||
+        scheduledAtTime[timeKey].has(t1) || scheduledAtTime[timeKey].has(t2)
       ) {
         continue;
       }
 
-      // Prevent same team scheduled twice in one time slot
-      if (scheduledAtTime[timeKey].has(t1) || scheduledAtTime[timeKey].has(t2)) continue;
+      // Try to find a pitch that is available globally at this time
+      let pitchFound = null;
+      for (let i = 0; i < pitchArray.length; i++) {
+        const pitch = pitchArray[i];
+        if (!globalPitchSchedule[pitch]) globalPitchSchedule[pitch] = {};
+        if (!globalPitchSchedule[pitch][timeKey]) {
+          pitchFound = pitch;
+          break;
+        }
+      }
 
-      const pitch = pitchArray.length > 0
-        ? pitchArray[pitchIndex % pitchArray.length]
-        : (roundMatches.length % numPitches) + 1;
+      if (!pitchFound) continue;
 
       const match = {
         team1: t1,
         team2: t2,
         time: new Date(currentTime).toISOString(),
-        pitch: pitch,
+        pitch: pitchFound,
       };
 
       roundMatches.push(match);
@@ -268,9 +290,11 @@ function scheduleMatchTimes(fixtures, numPitches, gameLength, enableBreaks, brea
       consecutiveMatches[t1] = (consecutiveMatches[t1] || 0) + 1;
       consecutiveMatches[t2] = (consecutiveMatches[t2] || 0) + 1;
 
-      // Remove scheduled match
+      globalPitchSchedule[pitchFound][timeKey] = true;
+
       unscheduled = unscheduled.filter(([a, b]) => !(a === t1 && b === t2));
       pitchIndex++;
+      matchScheduledThisRound = true;
 
       if (roundMatches.length >= matchesPerRound) break;
     }
@@ -280,17 +304,25 @@ function scheduleMatchTimes(fixtures, numPitches, gameLength, enableBreaks, brea
       if (!playingThisRound.has(team)) consecutiveMatches[team] = 0;
     }
 
-    // Only push actual matches
     if (roundMatches.length > 0) {
       rounds.push(...roundMatches);
     }
 
     currentTime.setMinutes(currentTime.getMinutes() + timeIncrement);
     roundNumber++;
+
+    // 🚨 Bail out if nothing got scheduled this round — prevents infinite loop
+if (!matchScheduledThisRound) {
+  console.warn(`No matches could be scheduled at ${timeKey}. Advancing time...`);
+  // Don't break — let time keep moving until we can schedule again
+}
+
   }
 
   return rounds;
 }
+
+
 
 
 
