@@ -48,6 +48,8 @@ export async function saveTournamentData(data) {
 
 // DOM elements
 const ageGroupSelect = document.getElementById("age-group-select");
+const daySelect = document.getElementById("day-select");
+const sessionSelect = document.getElementById("session-select");
 const teamNameInput = document.getElementById("team-name");
 const addTeamButton = document.getElementById("add-team");
 const teamsList = document.getElementById("teams-list");
@@ -62,7 +64,51 @@ const resultFixtureSelect = document.getElementById("result-fixture");
 const resultTeam1Score = document.getElementById("result-team1-score");
 const resultTeam2Score = document.getElementById("result-team2-score");
 const resultsList = document.getElementById("results-list");
+
+const knockoutFixtureSelect = document.getElementById("knockout-fixture");
+const knockoutTeam1Score = document.getElementById("knockout-team1-score");
+const knockoutTeam2Score = document.getElementById("knockout-team2-score");
+const addKnockoutResultButton = document.getElementById("add-knockout-result");
+const knockoutResultsList = document.getElementById("knockout-results-list");
+
 const resetButton = document.getElementById("reset-tournament");
+
+const moveFixtureForm = document.getElementById("move-fixture-form");
+const moveFixtureSelect = document.getElementById("move-fixture-select");
+const newFixtureTimeInput = document.getElementById("new-fixture-time");
+
+function getSelectedTournamentPath() {
+  const day = daySelect.value;
+  const session = sessionSelect.value;
+  const ageGroup = ageGroupSelect.value;
+
+  return {
+    day,
+    session,
+    ageGroup,
+    path: `${day}/${session}/${ageGroup}`
+  };
+}
+
+function ensureSelectedTournamentData(data) {
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+
+  data[day] = data[day] || {};
+  data[day][session] = data[day][session] || {};
+  data[day][session][ageGroup] = data[day][session][ageGroup] || {};
+
+  data[day][session][ageGroup].teams =
+    data[day][session][ageGroup].teams || [];
+
+  data[day][session][ageGroup].fixtures =
+    data[day][session][ageGroup].fixtures || [];
+
+  data[day][session][ageGroup].results =
+    data[day][session][ageGroup].results || [];
+
+  return data[day][session][ageGroup];
+}
+
 
 // Update team dropdowns
 function updateTeamDropdowns(teams) {
@@ -78,16 +124,175 @@ function updateTeamDropdowns(teams) {
 }
 
 // Render team list
-async function renderTeams(ageGroup) {
+async function renderTeams() {
   const data = await getTournamentData();
-  const teams = data[ageGroup]?.teams || [];
+
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+
+  const teams =
+    data[day]?.[session]?.[ageGroup]?.teams ||
+    data[ageGroup]?.teams ||
+    [];
+
   teamsList.innerHTML = "";
+
   teams.forEach(team => {
     const li = document.createElement("li");
     li.textContent = team;
     teamsList.appendChild(li);
   });
+
   updateTeamDropdowns(teams);
+}
+
+function calculateStandingsForFixtures(fixtures, results) {
+  const table = {};
+
+  fixtures.forEach(fixture => {
+    if (!table[fixture.team1]) {
+      table[fixture.team1] = {
+        team: fixture.team1,
+        played: 0,
+        points: 0,
+        gf: 0,
+        ga: 0,
+        gd: 0
+      };
+    }
+
+    if (!table[fixture.team2]) {
+      table[fixture.team2] = {
+        team: fixture.team2,
+        played: 0,
+        points: 0,
+        gf: 0,
+        ga: 0,
+        gd: 0
+      };
+    }
+  });
+
+  results.forEach(result => {
+    const matchingFixture = fixtures.find(fixture =>
+      fixture.team1 === result.team1 &&
+      fixture.team2 === result.team2 &&
+      fixture.time === result.time &&
+      fixture.pitch === result.pitch
+    );
+
+    if (!matchingFixture) return;
+
+    const team1 = result.team1;
+    const team2 = result.team2;
+    const s1 = parseInt(result.team1Score, 10);
+    const s2 = parseInt(result.team2Score, 10);
+
+    if (isNaN(s1) || isNaN(s2)) return;
+
+    table[team1].played++;
+    table[team2].played++;
+
+    table[team1].gf += s1;
+    table[team1].ga += s2;
+    table[team2].gf += s2;
+    table[team2].ga += s1;
+
+    if (s1 > s2) {
+      table[team1].points += 3;
+    } else if (s2 > s1) {
+      table[team2].points += 3;
+    } else {
+      table[team1].points += 1;
+      table[team2].points += 1;
+    }
+
+    table[team1].gd = table[team1].gf - table[team1].ga;
+    table[team2].gd = table[team2].gf - table[team2].ga;
+  });
+
+  return Object.values(table).sort((a, b) =>
+    b.points !== a.points
+      ? b.points - a.points
+      : b.gd !== a.gd
+      ? b.gd - a.gd
+      : b.gf - a.gf
+  );
+}
+
+function getKnockoutFixtures(fixtures, results) {
+  const groupAFixtures = fixtures.filter(fixture => fixture.group === "Group A");
+  const groupBFixtures = fixtures.filter(fixture => fixture.group === "Group B");
+
+  if (groupAFixtures.length === 0 || groupBFixtures.length === 0) {
+    return [];
+  }
+
+  const allGroupFixturesHaveResults = fixtures.every(fixture =>
+    results.some(result =>
+      result.team1 === fixture.team1 &&
+      result.team2 === fixture.team2 &&
+      result.time === fixture.time &&
+      result.pitch === fixture.pitch
+    )
+  );
+
+  if (!allGroupFixturesHaveResults) {
+    return [];
+  }
+
+  const groupAStandings = calculateStandingsForFixtures(groupAFixtures, results);
+  const groupBStandings = calculateStandingsForFixtures(groupBFixtures, results);
+
+  if (groupAStandings.length < 2 || groupBStandings.length < 2) {
+    return [];
+  }
+
+  const semiFinals = [
+    {
+      stage: "Semi Final 1",
+      team1: groupAStandings[0].team,
+      team2: groupBStandings[1].team
+    },
+    {
+      stage: "Semi Final 2",
+      team1: groupBStandings[0].team,
+      team2: groupAStandings[1].team
+    }
+  ];
+
+  const semiFinalResults = results.filter(result =>
+    result.type === "knockout" &&
+    (result.stage === "Semi Final 1" || result.stage === "Semi Final 2")
+  );
+
+  if (semiFinalResults.length < 2) {
+    return semiFinals;
+  }
+
+  const semiFinal1Result = semiFinalResults.find(result => result.stage === "Semi Final 1");
+  const semiFinal2Result = semiFinalResults.find(result => result.stage === "Semi Final 2");
+
+  if (!semiFinal1Result || !semiFinal2Result) {
+    return semiFinals;
+  }
+
+  const semiFinal1Winner =
+    semiFinal1Result.team1Score > semiFinal1Result.team2Score
+      ? semiFinal1Result.team1
+      : semiFinal1Result.team2;
+
+  const semiFinal2Winner =
+    semiFinal2Result.team1Score > semiFinal2Result.team2Score
+      ? semiFinal2Result.team1
+      : semiFinal2Result.team2;
+
+  const finalFixture = {
+    stage: "Final",
+    team1: semiFinal1Winner,
+    team2: semiFinal2Winner
+  };
+
+  return [...semiFinals, finalFixture];
 }
 
 // Helper to format ISO datetime string to local time string (e.g., "8:20 AM")
@@ -97,11 +302,28 @@ function formatTime(isoString) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-//render fixtures//
+// render fixtures
 async function renderFixtures(ageGroup) {
   const data = await getTournamentData();
-  const fixtures = data[ageGroup]?.fixtures || [];
-  const results = data[ageGroup]?.results || [];
+
+  const { day, session } = getSelectedTournamentPath();
+
+  const fixtures =
+    data[day]?.[session]?.[ageGroup]?.fixtures ||
+    data[ageGroup]?.fixtures ||
+    [];
+
+  const results =
+    data[day]?.[session]?.[ageGroup]?.results ||
+    data[ageGroup]?.results ||
+    [];
+
+  fixtures.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+  console.log(
+    "Sorted fixtures:",
+    fixtures.map(f => `${f.time} | ${f.team1} vs ${f.team2}`)
+  );
 
   fixturesList.innerHTML = "";
   resultFixtureSelect.innerHTML = "";
@@ -111,6 +333,7 @@ async function renderFixtures(ageGroup) {
 
     const hasResult = results.some(result => {
       const resultTime = new Date(result.time).getTime();
+
       return (
         result.team1 === fixture.team1 &&
         result.team2 === fixture.team2 &&
@@ -119,17 +342,20 @@ async function renderFixtures(ageGroup) {
       );
     });
 
-    const formattedTime = formatTime(fixture.time) || new Date(fixture.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const formattedTime =
+      formatTime(fixture.time) ||
+      new Date(fixture.time).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
 
     const li = document.createElement("li");
     li.textContent = `${formattedTime} - ${fixture.team1} vs ${fixture.team2} (Pitch ${fixture.pitch})`;
 
     if (hasResult) {
-      // Apply strikethrough and faded styling
       li.style.textDecoration = "line-through";
       li.style.color = "#999";
     } else {
-      // Only add unplayed fixtures to the dropdown
       const option = document.createElement("option");
       option.value = index;
       option.textContent = `${fixture.team1} vs ${fixture.team2} at ${formattedTime}`;
@@ -138,22 +364,37 @@ async function renderFixtures(ageGroup) {
 
     fixturesList.appendChild(li);
   });
+
+
+  // 👇 ADD THIS HERE (before closing })
+  const knockoutFixtures = getKnockoutFixtures(fixtures, results);
+
+  knockoutFixtureSelect.innerHTML = '<option value="">Select knockout fixture</option>';
+
+  knockoutFixtures.forEach((fixture, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = `${fixture.stage}: ${fixture.team1} vs ${fixture.team2}`;
+    knockoutFixtureSelect.appendChild(option);
+  });
 }
 
-
-
-
-
-
-async function renderResults(ageGroup) {
+// render Results
+async function renderResults() {
   const data = await getTournamentData();
+
   resultsList.innerHTML = "";
-  const results = data[ageGroup]?.results || [];
+
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+
+  const results =
+    data[day]?.[session]?.[ageGroup]?.results ||
+    data[ageGroup]?.results ||
+    [];
 
   results.forEach(result => {
     const li = document.createElement("li");
 
-    // Use top-level properties directly (no fixture property)
     const team1 = result.team1 || "Unknown";
     const team2 = result.team2 || "Unknown";
     const score1 = result.team1Score ?? "-";
@@ -161,6 +402,7 @@ async function renderResults(ageGroup) {
     const formattedTime = formatTime(result.time);
 
     li.textContent = `${team1} ${score1} - ${score2} ${team2} (Time: ${formattedTime})`;
+
     resultsList.appendChild(li);
   });
 }
@@ -172,10 +414,21 @@ async function updateLeagueTable(ageGroup) {
   if (!leagueTable) return;
 
   const data = await getTournamentData();
-  const teams = data[ageGroup]?.teams || [];
-  const results = data[ageGroup]?.results || [];
+
+  const { day, session } = getSelectedTournamentPath();
+
+  const teams =
+    data[day]?.[session]?.[ageGroup]?.teams ||
+    data[ageGroup]?.teams ||
+    [];
+
+  const results =
+    data[day]?.[session]?.[ageGroup]?.results ||
+    data[ageGroup]?.results ||
+    [];
 
   const table = {};
+
   teams.forEach(team => {
     table[team] = {
       team,
@@ -191,15 +444,19 @@ async function updateLeagueTable(ageGroup) {
   });
 
   results.forEach(result => {
-    const { fixture, team1Score, team2Score } = result;
-    if (!fixture) return;
-    const { team1, team2 } = fixture;
-    const s1 = parseInt(team1Score);
-    const s2 = parseInt(team2Score);
+    const team1 = result.team1 || result.fixture?.team1;
+    const team2 = result.team2 || result.fixture?.team2;
+
+    const s1 = parseInt(result.team1Score, 10);
+    const s2 = parseInt(result.team2Score, 10);
+
+    if (!team1 || !team2) return;
+    if (!table[team1] || !table[team2]) return;
     if (isNaN(s1) || isNaN(s2)) return;
 
     table[team1].played++;
     table[team2].played++;
+
     table[team1].gf += s1;
     table[team1].ga += s2;
     table[team2].gf += s2;
@@ -264,42 +521,48 @@ async function updateLeagueTable(ageGroup) {
 }
 
 // Load data when age group changes
-ageGroupSelect.addEventListener("change", () => {
-  const ageGroup = ageGroupSelect.value;
-  renderTeams(ageGroup);
-  renderFixtures(ageGroup);
-  renderResults(ageGroup);
-  updateLeagueTable(ageGroup);
+[daySelect, sessionSelect, ageGroupSelect].forEach(el => {
+  el.addEventListener("change", () => {
+    const day = daySelect.value;
+    const session = sessionSelect.value;
+    const ageGroup = ageGroupSelect.value;
+    renderTeams(ageGroup);
+    renderFixtures(ageGroup);
+    renderResults(ageGroup);
+    updateLeagueTable(ageGroup);
+  });
 });
+
 
 // Add Team
 addTeamButton.addEventListener("click", async () => {
-  const ageGroup = ageGroupSelect.value;
   if (!teamNameInput.value.trim()) {
     alert("Please enter a team name.");
     return;
   }
-  const data = await getTournamentData();
-  data[ageGroup] = data[ageGroup] || {};
-  data[ageGroup].teams = data[ageGroup].teams || [];
 
-  if (data[ageGroup].teams.includes(teamNameInput.value.trim())) {
+  const data = await getTournamentData();
+  const groupData = ensureSelectedTournamentData(data);
+  const newTeam = teamNameInput.value.trim();
+
+  if (groupData.teams.includes(newTeam)) {
     alert("Team already exists.");
     return;
   }
 
-  data[ageGroup].teams.push(teamNameInput.value.trim());
+  groupData.teams.push(newTeam);
   await saveTournamentData(data);
-
   teamNameInput.value = "";
-  renderTeams(ageGroup);
-  renderFixtures(ageGroup); // Refresh fixture dropdowns since teams changed
+
+  renderTeams();
+  renderFixtures();
 });
 
 // Add Fixture
+// Add Fixture
 fixtureForm.addEventListener("submit", async e => {
   e.preventDefault();
-  const ageGroup = ageGroupSelect.value;
+
   const team1 = team1Select.value;
   const team2 = team2Select.value;
   const time = fixtureTime.value;
@@ -316,37 +579,39 @@ fixtureForm.addEventListener("submit", async e => {
   }
 
   const data = await getTournamentData();
-  data[ageGroup] = data[ageGroup] || {};
-  data[ageGroup].fixtures = data[ageGroup].fixtures || [];
+  const groupData = ensureSelectedTournamentData(data);
 
-const [hours, minutes] = time.split(":");
-const now = new Date();
-const dateWithTime = new Date(
-  now.getFullYear(),
-  now.getMonth(),
-  now.getDate(),
-  parseInt(hours),
-  parseInt(minutes)
-);
+  const [hours, minutes] = time.split(":");
+  const now = new Date();
 
-data[ageGroup].fixtures.push({
-  team1,
-  team2,
-  time: dateWithTime.toISOString(),
-  pitch
-});
+  const dateWithTime = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    parseInt(hours, 10),
+    parseInt(minutes, 10)
+  );
 
+  groupData.fixtures.push({
+    team1,
+    team2,
+    time: dateWithTime.toISOString(),
+    pitch
+  });
+
+  groupData.fixtures.sort((a, b) => new Date(a.time) - new Date(b.time));
 
   await saveTournamentData(data);
-  renderFixtures(ageGroup);
-  renderResults(ageGroup); // Refresh results fixture options
+
+  renderFixtures();
+  renderResults();
   fixtureForm.reset();
 });
 
+// Add Result
 resultForm.addEventListener("submit", async e => {
   e.preventDefault();
 
-  const ageGroup = ageGroupSelect.value;
   const fixtureIndex = resultFixtureSelect.value;
   const team1Score = resultTeam1Score.value;
   const team2Score = resultTeam2Score.value;
@@ -361,72 +626,135 @@ resultForm.addEventListener("submit", async e => {
   }
 
   const data = await getTournamentData();
-  data[ageGroup] = data[ageGroup] || {};
-  data[ageGroup].results = data[ageGroup].results || [];
-  data[ageGroup].fixtures = data[ageGroup].fixtures || [];
+  const groupData = ensureSelectedTournamentData(data);
 
-  const fixture = data[ageGroup].fixtures[fixtureIndex];
+  const fixture = groupData.fixtures[fixtureIndex];
   if (!fixture) {
     alert("Invalid fixture selected.");
     return;
   }
 
-  // Find if result exists already
-  const existingResultIndex = data[ageGroup].results.findIndex(r =>
+  const existingResultIndex = groupData.results.findIndex(r =>
     r.team1 === fixture.team1 &&
     r.team2 === fixture.team2 &&
     r.time === fixture.time &&
     r.pitch === fixture.pitch
   );
 
-  // Create the result object
-  const newResult = {
-    team1: fixture.team1,
-    team2: fixture.team2,
-    pitch: fixture.pitch,
-    time: fixture.time,
-    team1Score: parseInt(team1Score, 10),
-    team2Score: parseInt(team2Score, 10)
-  };
+const newResult = {
+  team1: fixture.team1,
+  team2: fixture.team2,
+  pitch: fixture.pitch,
+  time: fixture.time,
+  group: fixture.group || "",
+  team1Score: parseInt(team1Score, 10),
+  team2Score: parseInt(team2Score, 10)
+};
 
   if (existingResultIndex >= 0) {
-    data[ageGroup].results[existingResultIndex] = newResult;
+    groupData.results[existingResultIndex] = newResult;
   } else {
-    data[ageGroup].results.push(newResult);
+    groupData.results.push(newResult);
   }
 
-  // Save the updated results back to Firebase (or local storage)
-  await saveTournamentData(data);
+await saveTournamentData(data);
 
-  // Clear form inputs
-  resultForm.reset();
+resultTeam1Score.value = "";
+resultTeam2Score.value = "";
 
-  // Re-render fixtures, results, and update league table
-  await renderFixtures(ageGroup);
-  await renderResults(ageGroup);
-  updateLeagueTable(ageGroup);
+const currentAgeGroup = ageGroupSelect.value;
+
+await renderFixtures(currentAgeGroup);
+await renderResults(currentAgeGroup);
+await updateLeagueTable(currentAgeGroup);
 });
 
+// Add Knockout Result
+addKnockoutResultButton.addEventListener("click", async () => {
+  const selectedIndex = knockoutFixtureSelect.value;
+  const team1Score = knockoutTeam1Score.value;
+  const team2Score = knockoutTeam2Score.value;
 
+  if (selectedIndex === "") {
+    alert("Please select a knockout fixture.");
+    return;
+  }
 
-
-// Reset tournament data for selected age group
-resetButton.addEventListener("click", async () => {
-  const ageGroup = ageGroupSelect.value;
-  if (!confirm(`Are you sure you want to reset all data for ${ageGroup}?`)) return;
+  if (team1Score === "" || team2Score === "") {
+    alert("Please enter both scores.");
+    return;
+  }
 
   const data = await getTournamentData();
-  if (data[ageGroup]) {
-    data[ageGroup].teams = [];
-    data[ageGroup].fixtures = [];
-    data[ageGroup].results = [];
+  const groupData = ensureSelectedTournamentData(data);
+
+  const knockoutFixtures = getKnockoutFixtures(
+    groupData.fixtures || [],
+    groupData.results || []
+  );
+
+  const fixture = knockoutFixtures[selectedIndex];
+
+  if (!fixture) {
+    alert("Invalid knockout fixture selected.");
+    return;
+  }
+
+  const newResult = {
+    stage: fixture.stage,
+    team1: fixture.team1,
+    team2: fixture.team2,
+    team1Score: parseInt(team1Score, 10),
+    team2Score: parseInt(team2Score, 10),
+    type: "knockout"
+  };
+
+  const existingResultIndex = groupData.results.findIndex(result =>
+    result.type === "knockout" &&
+    result.stage === fixture.stage
+  );
+
+  if (existingResultIndex >= 0) {
+    groupData.results[existingResultIndex] = newResult;
+  } else {
+    groupData.results.push(newResult);
+  }
+
+  await saveTournamentData(data);
+
+  knockoutTeam1Score.value = "";
+  knockoutTeam2Score.value = "";
+
+  await renderFixtures(ageGroupSelect.value);
+  await renderResults(ageGroupSelect.value);
+
+  alert(`${fixture.stage} result saved.`);
+});
+
+// Reset tournament data for selected day/session/age group
+resetButton.addEventListener("click", async () => {
+  const day = daySelect.value;
+  const session = sessionSelect.value;
+  const ageGroup = ageGroupSelect.value;
+
+  if (!confirm(`Are you sure you want to reset all data for ${day} / ${session} / ${ageGroup}?`)) return;
+
+  const data = await getTournamentData();
+
+  if (data[day]?.[session]?.[ageGroup]) {
+    data[day][session][ageGroup].teams = [];
+    data[day][session][ageGroup].fixtures = [];
+    data[day][session][ageGroup].results = [];
+
     await saveTournamentData(data);
   }
 
-  renderTeams(ageGroup);
-  renderFixtures(ageGroup);
-  renderResults(ageGroup);
-  updateLeagueTable(ageGroup);
+  await renderTeams(ageGroup);
+  await renderFixtures(ageGroup);
+  await renderResults(ageGroup);
+  await updateLeagueTable(ageGroup);
+
+  alert(`Tournament data reset for ${day} / ${session} / ${ageGroup}.`);
 });
 
 // Initial load

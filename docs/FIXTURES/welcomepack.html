@@ -2,242 +2,538 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>FC Hanley Welcome Pack</title>
+  <title>FC Hanley Welcome Pack Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background: #f9f9f9;
+      font-family: 'Roboto', sans-serif;
+      background: #0d1b2a;
+      color: #e0e8f0;
+      min-height: 100vh;
+      padding: 24px 20px 60px;
     }
-    .pack {
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      max-width: 800px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      height: auto;
-      overflow: visible;
-    }
-    h1, h2, h3 {
-      color: #1c3e70;
-      page-break-after: avoid;
-      page-break-inside: avoid;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      page-break-inside: avoid;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+
+    /* ===== Header ===== */
+    header {
       text-align: center;
-      page-break-inside: avoid;
+      margin-bottom: 32px;
     }
-    ul {
-      padding-left: 1.2rem;
-      page-break-inside: avoid;
+    header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 12px rgba(0,120,255,0.4);
     }
-    p {
-      page-break-inside: avoid;
-      margin: 0.5rem 0;
+    header p {
+      color: #7ec8ff;
+      font-size: 0.95rem;
+      margin-top: 6px;
     }
-    #downloadBtn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #1c3e70;
-      color: white;
-      border: none;
-      border-radius: 5px;
+
+    /* ===== Container ===== */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+    .card h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #7ec8ff;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(126,200,255,0.25);
+    }
+
+    /* ===== Controls Grid ===== */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 540px) {
+      .controls-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-item label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #a0b8d0;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .form-item select,
+    .form-item input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    .form-item select:focus,
+    .form-item input:focus {
+      outline: none;
+      border-color: #7ec8ff;
+      background: rgba(255,255,255,0.12);
+    }
+    .form-item select option { background: #1a2d42; color: #fff; }
+
+    /* ===== Status / Info bar ===== */
+    .status-bar {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      display: none;
+    }
+    .status-bar.info  { background: rgba(126,200,255,0.12); color: #7ec8ff; border: 1px solid rgba(126,200,255,0.3); display: block; }
+    .status-bar.error { background: rgba(255,80,80,0.12);   color: #ff8080;  border: 1px solid rgba(255,80,80,0.3);  display: block; }
+    .status-bar.ok    { background: rgba(80,200,120,0.12);  color: #50c878;  border: 1px solid rgba(80,200,120,0.3); display: block; }
+
+    /* ===== Team List ===== */
+    #teamList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .team-btn {
+      padding: 10px 14px;
+      background: rgba(126,200,255,0.1);
+      border: 1px solid rgba(126,200,255,0.25);
+      border-radius: 10px;
+      color: #e0e8f0;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
       cursor: pointer;
+      transition: all 0.18s;
+      text-align: left;
     }
-    select {
-      margin-bottom: 1rem;
-      margin-right: 1rem;
+    .team-btn:hover  { background: rgba(126,200,255,0.22); border-color: #7ec8ff; color: #fff; transform: translateY(-2px); }
+    .team-btn.active { background: #006bb3; border-color: #0090ff; color: #fff; }
+
+    /* ===== Action Buttons ===== */
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
     }
+    .btn {
+      padding: 11px 22px;
+      font-size: 0.9rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary  { background: #006bb3; color: #fff; }
+    .btn-primary:hover  { background: #0084db; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #e0e8f0; border: 1px solid rgba(255,255,255,0.2); }
+    .btn-secondary:hover { background: rgba(255,255,255,0.18); }
+    .btn-success { background: #1a7a40; color: #fff; }
+    .btn-success:hover { background: #219150; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ===== Preview pane ===== */
+    #previewWrapper {
+      display: none;
+    }
+    #previewWrapper.visible { display: block; }
+
+    /* ===== PDF Pack Styling ===== */
+    #pack {
+      background: #fff;
+      color: #111;
+      padding: 32px 36px;
+      border-radius: 12px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    #pack h2 { color: #1c3e70; font-size: 1.4rem; margin-bottom: 4px; }
+    #pack h3 { color: #1c3e70; font-size: 1.05rem; margin: 18px 0 8px; border-left: 4px solid #1c3e70; padding-left: 8px; }
+    #pack p  { margin: 4px 0; }
+    #pack .pack-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    #pack .pack-header img { height: 100px; object-fit: contain; }
+    #pack table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    #pack th, #pack td { border: 1px solid #ccc; padding: 7px 10px; text-align: center; font-size: 13px; }
+    #pack th { background: #1c3e70; color: #fff; }
+    #pack tr:nth-child(even) td { background: #f4f8ff; }
+    #pack ul { padding-left: 1.4rem; }
+    #pack ul li { margin-bottom: 4px; }
+    #pack .qr-section { text-align: center; margin-top: 20px; }
+    #pack .qr-section p { font-weight: bold; margin-bottom: 8px; color: #1c3e70; }
+    #pack .divider { border: none; border-top: 2px solid #1c3e70; margin: 18px 0; }
+
+    /* ===== Loading spinner ===== */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <h1>FC Hanley Welcome Pack Generator</h1>
+  <header>
+    <h1>FC Hanley Welcome Pack Generator</h1>
+    <p>Select a session, then click a team to generate and download their welcome pack</p>
+  </header>
 
-  <label for="ageGroupSelect">Select age group:</label>
-  <select id="ageGroupSelect" onchange="loadFixtures()">
-    <option value="">--Choose an age group--</option>
-    <option value="U7">U7</option>
-    <option value="U8">U8</option>
-    <option value="U9">U9</option>
-    <option value="U10">U10</option>
-  </select>
+  <div class="container">
 
-  <label for="teamSelect">Select your team:</label>
-  <select id="teamSelect" onchange="generatePack()">
-    <option value="">--Choose a team--</option>
-  </select>
+    <!-- Step 1: Choose session -->
+    <div class="card">
+      <h2>Step 1 — Select Session</h2>
+      <div class="controls-grid">
+        <div class="form-item">
+          <label for="daySelect">Day</label>
+          <select id="daySelect">
+            <option value="day1">Day 1</option>
+            <option value="day2">Day 2</option>
+          </select>
+        </div>
+        <div class="form-item">
+          <label for="sessionSelect">Session</label>
+          <select id="sessionSelect">
+            <option value="am">AM</option>
+            <option value="pm">PM</option>
+          </select>
+        </div>
+        <div class="form-item">
+          <label for="ageGroupSelect">Age Group</label>
+          <select id="ageGroupSelect">
+            <option value="">— Select —</option>
+            <option value="U7">U7</option>
+            <option value="U8">U8</option>
+            <option value="U9">U9</option>
+            <option value="U10">U10</option>
+            <option value="U11">U11</option>
+            <option value="U12">U12</option>
+            <option value="U13">U13</option>
+          </select>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="loadBtn">Load Teams</button>
+      </div>
+      <div id="statusBar" class="status-bar"></div>
+    </div>
 
-  <div id="pack" class="pack"></div>
-  <button id="downloadBtn" onclick="downloadPDF()">Download as PDF</button>
+    <!-- Step 2: Pick a team -->
+    <div class="card" id="teamCard" style="display:none">
+      <h2>Step 2 — Select a Team</h2>
+      <div id="teamList"></div>
+      <div class="action-row" style="margin-top:20px">
+        <button class="btn btn-success" id="downloadAllBtn" disabled>⬇ Download All Packs</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Preview + download -->
+    <div class="card" id="previewWrapper">
+      <h2>Step 3 — Preview &amp; Download</h2>
+      <div class="action-row" style="margin-bottom: 16px;">
+        <button class="btn btn-primary" id="downloadBtn">⬇ Download PDF</button>
+        <button class="btn btn-secondary" id="clearBtn">Clear</button>
+      </div>
+      <div id="pack"></div>
+    </div>
+
+  </div>
 
   <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDXXX-LMkY4Q0oN0M9e5wLdVhANzL8ifHs",
-  authDomain: "fchanley-8d910.firebaseapp.com",
-  databaseURL: "https://fchanley-8d910-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "fchanley-8d910",
-  storageBucket: "fchanley-8d910.firebasestorage.app",
-  messagingSenderId: "384977183977",
-  appId: "1:384977183977:web:7805c8ba7e9122b883bc78",
-  measurementId: "G-1CBV4NK83L"
-};
+    // ===== Firebase Setup =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXXX-LMkY4Q0oN0M9e5wLdVhANzL8ifHs",
+      authDomain: "fchanley-8d910.firebaseapp.com",
+      databaseURL: "https://fchanley-8d910-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "fchanley-8d910",
+      storageBucket: "fchanley-8d910.firebasestorage.app",
+      messagingSenderId: "384977183977",
+      appId: "1:384977183977:web:7805c8ba7e9122b883bc78",
+      measurementId: "G-1CBV4NK83L"
+    };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // ===== State =====
     let fixtures = [];
+    let allTeams = [];
+    let selectedTeam = null;
 
-    function loadFixtures() {
-      const ageGroup = document.getElementById('ageGroupSelect').value;
-      const teamSelect = document.getElementById('teamSelect');
-      document.getElementById('pack').innerHTML = '';
-      teamSelect.innerHTML = '<option value="">--Choose a team--</option>';
-
-      if (!ageGroup) {
-        fixtures = [];
-        return;
-      }
-
-      db.ref(`tournamentData/${ageGroup}/fixtures`).once('value')
-        .then(snapshot => {
-          const data = snapshot.val();
-          if (!data) {
-            alert("No fixture data found in Firebase.");
-            return;
-          }
-          fixtures = Object.values(data).map(fix => ({
-            teamA: fix.team1,
-            teamB: fix.team2,
-            time: fix.time,
-            pitch: fix.pitch,
-            ageGroup
-          }));
-          populateTeamDropdown();
-        })
-        .catch(error => {
-          console.error("Error loading fixtures:", error);
-        });
+    // ===== Helpers =====
+    function getSelections() {
+      return {
+        day:      document.getElementById('daySelect').value,
+        session:  document.getElementById('sessionSelect').value,
+        ageGroup: document.getElementById('ageGroupSelect').value
+      };
     }
 
-    function populateTeamDropdown() {
-      const teams = new Set();
-      fixtures.forEach(fix => {
-        teams.add(fix.teamA);
-        teams.add(fix.teamB);
-      });
+    function setStatus(msg, type = 'info') {
+      const bar = document.getElementById('statusBar');
+      bar.textContent = msg;
+      bar.className = `status-bar ${type}`;
+    }
 
-      const select = document.getElementById("teamSelect");
-      select.innerHTML = '<option value="">--Choose a team--</option>';
-      teams.forEach(team => {
-        const option = document.createElement("option");
-        option.value = team;
-        option.textContent = team;
-        select.appendChild(option);
+    function clearStatus() {
+      const bar = document.getElementById('statusBar');
+      bar.className = 'status-bar';
+      bar.textContent = '';
+    }
+
+    function formatTime(isoString) {
+      if (!isoString) return '—';
+      const d = new Date(isoString);
+      if (isNaN(d)) return '—';
+      let h = d.getHours(), m = d.getMinutes().toString().padStart(2,'0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${m} ${ampm}`;
+    }
+
+    // ===== Load Teams =====
+    document.getElementById('loadBtn').addEventListener('click', loadData);
+
+    async function loadData() {
+      const { day, session, ageGroup } = getSelections();
+      if (!ageGroup) { setStatus('Please select an age group.', 'error'); return; }
+
+      const btn = document.getElementById('loadBtn');
+      btn.innerHTML = '<span class="spinner"></span>Loading…';
+      btn.disabled = true;
+      clearStatus();
+
+      const path = `tournamentData/${day}/${session}/${ageGroup}`;
+
+      try {
+        const snapshot = await db.ref(path).once('value');
+        const data = snapshot.val() || {};
+
+        const rawFixtures = data.fixtures || [];
+        fixtures = Array.isArray(rawFixtures)
+          ? rawFixtures
+          : Object.values(rawFixtures);
+
+        if (fixtures.length === 0) {
+          setStatus(`No fixtures found for ${ageGroup} — ${day.toUpperCase()} ${session.toUpperCase()}. Make sure fixtures have been generated first.`, 'error');
+          document.getElementById('teamCard').style.display = 'none';
+          btn.innerHTML = 'Load Teams';
+          btn.disabled = false;
+          return;
+        }
+
+        // Derive unique teams
+        const teamSet = new Set();
+        fixtures.forEach(f => { if (f.team1) teamSet.add(f.team1); if (f.team2) teamSet.add(f.team2); });
+        allTeams = [...teamSet].sort();
+
+        renderTeamButtons();
+        document.getElementById('teamCard').style.display = 'block';
+        document.getElementById('downloadAllBtn').disabled = false;
+        setStatus(`✓ Loaded ${fixtures.length} fixtures across ${allTeams.length} teams.`, 'ok');
+
+      } catch (err) {
+        console.error(err);
+        setStatus('Error loading data from Firebase. Check console for details.', 'error');
+      }
+
+      btn.innerHTML = 'Load Teams';
+      btn.disabled = false;
+    }
+
+    // ===== Render Team Buttons =====
+    function renderTeamButtons() {
+      const list = document.getElementById('teamList');
+      list.innerHTML = '';
+      allTeams.forEach(team => {
+        const btn = document.createElement('button');
+        btn.className = 'team-btn';
+        btn.textContent = team;
+        btn.addEventListener('click', () => selectTeam(team, btn));
+        list.appendChild(btn);
       });
     }
 
-    function generatePack() {
-      const team = document.getElementById('teamSelect').value;
-      const pack = document.getElementById('pack');
-      if (!team) {
-        pack.innerHTML = "";
-        return;
-      }
+    // ===== Select Team & Preview =====
+    function selectTeam(team, btnEl) {
+      selectedTeam = team;
+      document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+      generatePack(team);
+      document.getElementById('previewWrapper').classList.add('visible');
+      document.getElementById('previewWrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-      const teamFixtures = fixtures.filter(fix =>
-        fix.teamA === team || fix.teamB === team
-      );
+    // ===== Generate Pack HTML =====
+    function generatePack(team) {
+      const { ageGroup, day, session } = getSelections();
 
-      const ageGroup = teamFixtures[0]?.ageGroup || "Unknown";
+      const teamFixtures = fixtures.filter(f =>
+        (f.team1 || '').trim().toLowerCase() === team.trim().toLowerCase() ||
+        (f.team2 || '').trim().toLowerCase() === team.trim().toLowerCase()
+      ).sort((a, b) => new Date(a.time) - new Date(b.time));
 
-      let fixtureRows = teamFixtures.map(f => {
-        const opponent = f.teamA === team ? f.teamB : f.teamA;
-        const dateObj = new Date(f.time);
-        const formattedTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return `<tr><td>${formattedTime}</td><td>${f.pitch}</td><td>${opponent}</td></tr>`;
-      }).join("");
+      const fixtureRows = teamFixtures.map(f => {
+        const opponent = f.team1.trim().toLowerCase() === team.trim().toLowerCase() ? f.team2 : f.team1;
+        const group = f.group ? `<span style="font-size:11px;color:#666">(${f.group})</span>` : '';
+        return `<tr>
+          <td>${formatTime(f.time)}</td>
+          <td>Pitch ${f.pitch}</td>
+          <td>${opponent} ${group}</td>
+        </tr>`;
+      }).join('');
 
-      pack.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; page-break-inside: avoid;">
-          <h2 style="margin: 0;">Welcome, ${team}!</h2>
-          <img src="HanleyBadge.png" alt="FC Hanley Logo" style="height: 150px; object-fit: contain;">
+      const sessionLabel = session.toUpperCase();
+      const dayLabel = day === 'day1' ? 'Day 1' : 'Day 2';
+
+      document.getElementById('pack').innerHTML = `
+        <div class="pack-header">
+          <div>
+            <h2>Welcome, ${team}!</h2>
+            <p style="color:#555;font-size:12px;margin-top:4px">${ageGroup} · ${dayLabel} · ${sessionLabel} Session</p>
+          </div>
+          <img src="HanleyBadge.png" alt="FC Hanley Logo" onerror="this.style.display='none'">
         </div>
-        <p>Thank you for joining the <strong>FC Hanley Annual 5-a-side tournament</strong></p>
-        <p>Please report to the registration marquee on arrival to check in</p>
-        <p>We’re excited to have you and wish you good luck!</p>
 
-        <h3>Your Fixtures:</h3>
+        <p>Thank you for joining the <strong>Will Brazier Festival of Football!</strong>.</p>
+        <p>Please report to the registration marquee on arrival to check in. We're excited to have you and wish you good luck!</p>
+
+        <hr class="divider">
+
+        <h3>Your Fixtures</h3>
         <table>
-          <tr><th>Time</th><th>Pitch</th><th>Opponent</th></tr>
-          ${fixtureRows}
+          <thead><tr><th>Time</th><th>Pitch</th><th>Opponent</th></tr></thead>
+          <tbody>${fixtureRows || '<tr><td colspan="3">No fixtures found</td></tr>'}</tbody>
         </table>
 
         <h3>Tournament Rules</h3>
         <ul>
-          <li>5-a-side, Max squad size as per standard league rules</li>
+          <li>Standard league rules</li>
           <li>10 minute matches</li>
           <li>Rolling substitutions</li>
-          <li>Champions League style format, 10 teams, each team will play 6 games. Top 4 qualify for Knockout stages</li>
-          <li>Overhead Height: Allowed  -  Scoring in the box: Allowed</li>
-          <li>In the event of a tie after league games, goal difference decides. If tied again, 5 penalty shootout.</li>
-          <li>12.5 minute matches in the knockout stages</li>
-          <li>The referee's decision is final. Please respect the match officials.</li>
-          <li>Due to the number of fixtures, the games will come thick and fast!  We have ensured no team plays more than 2 games consecutively</li>
+          <li>Shin pads must be worn</li>
+          <li>Please bring bibs or a change of shirt to avoid colour clashes</li>
+          <li>Top 2 teams from each group will qualify for the knockout stages</li>
+          <li>Tiebreaker: goal difference, then 5-kick penalty shootout if still level</li>
+          <li>The referee's decision is final. Please respect all match officials.</li>
         </ul>
 
         <h3>Event Details</h3>
-        <p><strong>Date:</strong> Sunday, 6th July 2025</p>
-        <p><strong>Registration:</strong> From 08:15 with prompt 09:00 start</p>
-        <p><strong>Venue:</strong> FC Hanley Potteries Park, Abbey Lane, Stoke-on-Trent, ST2 8AJ</p>
-        <p><strong>Free Parking</strong></p>
-        <p><strong>Details:</strong> Onsite Cafe with a great range of refreshments and hot & cold food available</p>
-        <p><strong>Contact:</strong> Kelsey Stair - 07495 051135 / Dean Colclough – 07813 689645</p>
+        <p><strong>Date:</strong> Saturday, 4th July 2026 &nbsp;|&nbsp; <strong>Venue:</strong> FC Hanley Potteries Park, Abbey Lane, Stoke-on-Trent, ST2 8AJ</p>
+        <p><strong>Registration:</strong> From 08:15 — prompt 09:15 start &nbsp;|&nbsp; <strong>Free Parking</strong></p>
+        <p><strong>Refreshments:</strong> Onsite café with hot &amp; cold food available</p>
+        <p><strong>Contact:</strong> Kelsey Stair — 07495 051135 &nbsp;/&nbsp; Dean Colclough — 07813 689645</p>
 
-        <div class="qr-code-section" style="text-align: center; margin: 20px 0;">
-  <h3>Follow all the action Live! Scan the QR Code for Live League and Result updates</h3>
-  <img src="https://api.qrserver.com/v1/create-qr-code/?data=https%3A%2F%2Fdeanodealo.github.io%2FFCHanleytournament%2F&size=200x200" alt="QR Code to FC Hanley Tournament" style="width: 200px; height: 200px;">
-</div>
-
+        <div class="qr-section">
+          <p>Follow all the action live! Scan for live league table &amp; result updates.</p>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?data=https%3A%2F%2Fdeanodealo.github.io%2FFCHanleytournament%2F&size=200x200"
+               alt="QR Code" style="width:160px;height:160px;" crossorigin="anonymous">
+        </div>
       `;
-
-}
-
-
-
-
-    function downloadPDF() {
-      const element = document.getElementById('pack');
-      if (!element.innerHTML.trim()) {
-        alert("Please select a team first.");
-        return;
-      }
-      const team = document.getElementById('teamSelect').value;
-
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `FC_Hanley_${team}_WelcomePack.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-
-      html2pdf().set(opt).from(element).save();
     }
-  </script>
 
+    // ===== Download Single PDF =====
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!selectedTeam) return;
+      downloadPackForTeam(selectedTeam);
+    });
+
+    function downloadPackForTeam(team) {
+      generatePack(team);
+      const { ageGroup } = getSelections();
+
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const element = document.getElementById('pack');
+          const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `FC_Hanley_${ageGroup}_${team.replace(/\s+/g, '_')}_WelcomePack.pdf`,
+            image: { type: 'jpeg', quality: 0.97 },
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+          html2pdf().set(opt).from(element).save().then(resolve);
+        }, 300);
+      });
+    }
+
+    // ===== Download All PDFs (sequential) =====
+    document.getElementById('downloadAllBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('downloadAllBtn');
+      btn.disabled = true;
+
+      for (let i = 0; i < allTeams.length; i++) {
+        const team = allTeams[i];
+        btn.innerHTML = `<span class="spinner"></span>Downloading ${i + 1}/${allTeams.length}: ${team}`;
+        generatePack(team);
+        await downloadPackForTeam(team);
+        await new Promise(r => setTimeout(r, 600)); // small pause between downloads
+      }
+
+      btn.innerHTML = '✓ All Packs Downloaded!';
+      setTimeout(() => {
+        btn.innerHTML = '⬇ Download All Packs';
+        btn.disabled = false;
+      }, 3000);
+    });
+
+    // ===== Clear Preview =====
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('previewWrapper').classList.remove('visible');
+      document.getElementById('pack').innerHTML = '';
+      document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('active'));
+      selectedTeam = null;
+    });
+  </script>
 </body>
 </html>

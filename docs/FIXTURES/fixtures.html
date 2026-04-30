@@ -2,66 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fixture Generator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    input, button, select, textarea {
-      margin: 5px 0;
-      padding: 6px;
-    }
-    .section {
-      margin-bottom: 20px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 15px;
-    }
-  </style>
-
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="fixtures.css">
 </head>
 <body>
-  <h1>Football Fixture Generator</h1>
 
-  <div class="section">
-    <label for="ageGroup">Select Age Group:</label>
-<select id="ageGroup" multiple>
-  <option value="U7">U7</option>
-  <option value="U8">U8</option>
-  <option value="U9">U9</option>
-  <option value="U10">U10</option>
-</select>
-<small>Hold Ctrl or Cmd to select multiple age groups</small>
-    <label>Number of Pitches: <input type="number" id="pitches" min="1" value="3"></label><br>
-    <label>Match Length (mins): <input type="number" id="matchLength" min="1" value="10"></label><br>
-    <label>Games per Team: <input type="number" id="gamesPerTeam" min="1" value="6"></label><br>
-    <label><input type="checkbox" id="enableBreaks"> Add Breaks Between Match Rounds</label><br>
-    <label>Break Length (mins): <input type="number" id="breakLength" min="1" value="5"></label><br>
+  <header>
+    <h1>Fixture Generator</h1>
+  </header>
 
-    <div id="pitchAssignments"></div>
+  <div class="container">
 
+    <div class="section card">
+      <h2>Tournament Settings</h2>
 
-    <label>Enter Team Names (one per line):<br>
-      <textarea id="teamNames" rows="10" cols="30" placeholder="Team A&#10;Team B&#10;Team C"></textarea>
-    </label><br>
+      <div class="form-grid">
+        <div class="form-item">
+          <label for="fixtureDay">Day</label>
+          <select id="fixtureDay">
+            <option value="day1">Day 1</option>
+            <option value="day2">Day 2</option>
+          </select>
+        </div>
 
-    <button id="generateBtn">Generate Fixtures</button>
-    <button onclick="exportCSV()">Export Fixtures to CSV</button>
-  </div>
+        <div class="form-item">
+          <label for="fixtureSession">Session</label>
+          <select id="fixtureSession">
+            <option value="am">AM</option>
+            <option value="pm">PM</option>
+          </select>
+        </div>
 
-  <div class="section">
-    <h2>Generated Fixtures</h2>
-    <div id="fixtureList"></div>
-  </div>
+        <div class="form-item">
+          <label for="ageGroup">Age Group</label>
+          <select id="ageGroup" multiple>
+            <option value="U7">U7</option>
+            <option value="U8">U8</option>
+            <option value="U9">U9</option>
+            <option value="U10">U10</option>
+            <option value="U11">U11</option>
+            <option value="U12">U12</option>
+            <option value="U13">U13</option>
+          </select>
+        </div>
 
-  <div class="section">
-    <h2>Team Match Lists</h2>
-    <div id="teamMatchLists"></div>
+        <div class="form-item">
+          <label for="startTime">Start Time</label>
+          <input type="time" id="startTime" value="09:00">
+        </div>
+
+        <div class="form-item">
+          <label for="pitches">Number of Pitches</label>
+          <input type="number" id="pitches" min="1" value="3">
+        </div>
+
+        <div class="form-item">
+          <label for="matchLength">Match Length (mins)</label>
+          <input type="number" id="matchLength" min="1" value="10">
+        </div>
+
+        <div class="form-item">
+          <label for="breakLength">Break Length (mins)</label>
+          <input type="number" id="breakLength" min="1" value="5">
+        </div>
+
+        <div class="form-item">
+          <label for="number-of-groups">Number of Groups</label>
+          <select id="number-of-groups">
+            <option value="1">1 Group</option>
+            <option value="2">2 Groups</option>
+            <option value="3">3 Groups</option>
+            <option value="4">4 Groups</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-item checkbox-item">
+        <label>
+          <input type="checkbox" id="enableBreaks"> Add Breaks Between Match Rounds
+        </label>
+      </div>
+
+      <div id="pitchAssignments"></div>
+
+      <div class="form-item">
+        <label for="teamNames">Team Names (one per line)</label>
+        <textarea id="teamNames" rows="10" placeholder="Team A&#10;Team B&#10;Team C"></textarea>
+      </div>
+
+      <div class="button-row">
+        <button id="generateFixturesButton">Generate Fixtures</button>
+        <button onclick="exportCSV()">Export to CSV</button>
+      </div>
+    </div>
+
+    <div class="section card">
+      <h2>Generated Fixtures</h2>
+      <div id="fixtureList"></div>
+    </div>
+
+    <div class="section card" id="renameTeamSection">
+      <h2>Rename Team</h2>
+
+      <div class="form-grid">
+        <div class="form-item">
+          <label for="renameAgeGroup">Age Group</label>
+          <select id="renameAgeGroup">
+            <option value="">-- Select Age Group --</option>
+            <option value="U7">U7</option>
+            <option value="U8">U8</option>
+            <option value="U9">U9</option>
+            <option value="U10">U10</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="renameTeamSelect">Current Team Name</label>
+          <select id="renameTeamSelect">
+            <option value="">-- Select Team --</option>
+          </select>
+        </div>
+
+        <div class="form-item">
+          <label for="newTeamName">New Team Name</label>
+          <input type="text" id="newTeamName" placeholder="Enter new team name">
+        </div>
+      </div>
+
+      <button id="renameTeamBtn">Rename Team</button>
+    </div>
+
   </div>
 
   <script type="module" src="./fixtures.js"></script>
-
-
 </body>
 </html>

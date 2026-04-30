@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,89 +9,104 @@
 </head>
 <body>
   <img src="images/fun5.jpg" alt="" class="bg-overlay" />
-    <header>
-        <div class="banner-images">
-          <!--<img src="images/wendy.jpg" alt="Left Banner Image" class="banner-image-left"> -->
-          <img src="images/header.jpg" alt="FC Hanley Logo" class="logo">
-          <!--<img src="images/wendy.jpg" alt="Right Banner Image" class="banner-image-right"> -->
-        </div>
-    </header>
-    
-    <div class="main-content">
-      <!-- League Table (Left) -->
-      <div class="league-table">
-        <h2 id="age-group-header">U7 League Table</h2> <!-- Display current age group -->
-        <table id="table">
-          <thead>
-            <tr>
-              <th>Team</th>
-              <th>P</th>
-              <th>W</th>
-              <th>D</th>
-              <th>L</th>
-              <th>PTS</th>
-              <th>GD</th> <!-- Added Goal Difference column -->
-            </tr>
-          </thead>
-          <tbody>
-            <!-- populated by JS -->
-          </tbody>
-        </table>
-      </div>
 
-      <!-- Match Results Section (Right) -->
-      <div class="fixtures-results">
-        <h2>Match Results</h2>
-        <ul id="results-list">
-          <!-- populated by JS -->
-        </ul>
-      </div>
-
-      <!-- Fixtures Section (Right) -->
-      <div class="fixtures-results">
-        <h2>Fixtures</h2>
-        <ul id="fixtures-list">
-          <!-- populated by JS -->
-        </ul>
-      </div>
+  <header>
+    <div class="banner-images">
+      <img src="images/festival image.png" alt="FC Hanley Logo" class="logo">
     </div>
+  </header>
 
-    <footer>
-      <div class="auto-cycle">
-        <label for="age-group-select">Select Age Group:</label>
+  <!-- Controls bar — selects ONLY -->
+  <div class="public-controls">
+    <p class="controls-title">Select below to view your fixtures and results</p>
+
+    <div class="controls-row">
+      <div class="control-item">
+        <label for="day-select">Day</label>
+        <select id="day-select">
+          <option value="day1">Day 1</option>
+          <option value="day2">Day 2</option>
+        </select>
+      </div>
+
+      <div class="control-item">
+        <label for="session-select">Session</label>
+        <select id="session-select">
+          <option value="am">AM</option>
+          <option value="pm">PM</option>
+        </select>
+      </div>
+
+      <div class="control-item">
+        <label for="age-group-select">Age Group</label>
         <select id="age-group-select">
           <option value="U7">U7</option>
           <option value="U8">U8</option>
           <option value="U9">U9</option>
           <option value="U10">U10</option>
+          <option value="U11">U11</option>
+          <option value="U12">U12</option>
+          <option value="U13">U13</option>
         </select>
-
-        <div class="age-group-selection">
-          <label>
-            <input type="checkbox" id="u7-checkbox" checked>
-            U7
-          </label>
-          <label>
-            <input type="checkbox" id="u8-checkbox" checked>
-            U8
-          </label>
-          <label>
-            <input type="checkbox" id="u9-checkbox" checked>
-            U9
-          </label>
-          <label>
-            <input type="checkbox" id="u10-checkbox" checked>
-            U10
-          </label>
-        </div>
-
-        <label for="auto-cycle">Auto Cycle Age Groups</label>
-        <input type="checkbox" id="auto-cycle"/>
       </div>
-    </footer>
 
-    <!-- Add JS file -->
-    <script type="module" src="homepage.js"></script>
+      <div class="control-item">
+        <label for="group-select">Group</label>
+        <select id="group-select">
+          <!--<option value="all">All / Single Group</option>-->
+          <option value="Group A">Group A</option>
+          <option value="Group B">Group B</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
+  <!-- Main content — OUTSIDE the controls bar -->
+  <div class="main-content mobile-tournament-layout">
+
+    <section class="card league-table">
+      <h2 id="age-group-header">League Table</h2>
+      <table id="table">
+        <thead>
+          <tr>
+            <th>Team</th>
+            <th>P</th>
+            <th>W</th>
+            <th>D</th>
+            <th>L</th>
+            <th>PTS</th>
+            <th>GD</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="card fixtures-results">
+      <h2>Fixtures</h2>
+      <ul id="fixtures-list"></ul>
+    </section>
+
+    <section class="card fixtures-results">
+      <h2>Results</h2>
+      <ul id="results-list"></ul>
+    </section>
+
+    <section class="card fixtures-results knockout-card">
+      <h2>Knockout Stages</h2>
+      <div id="knockout-display">
+        Semi-finals and final will appear here once group games are complete.
+      </div>
+    </section>
+
+  </div>
+
+
+<footer>
+Proudly raising funds for the Douglas Macmillan Cancer Support Charity <br>
+  <img src="images/dugmac.png" alt="DougieMac" style="height: 50px; margin-top: 10px; background: white; border-radius: 6px; padding: 4px 10px;">
+</footer>
+
+  <script type="module" src="homepage.js"></script>
 </body>
 </html>

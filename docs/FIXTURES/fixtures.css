@@ -1,103 +1,361 @@
-/* fixtures.css */
+/* ============================= */
+/*      Global Reset            */
+/* ============================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
+/* ============================= */
+/*      Body                    */
+/* ============================= */
+body {
+  font-family: 'Roboto', sans-serif;
+  background: #0d1b2a;
+  color: #e0e8f0;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* ============================= */
+/*      Header                  */
+/* ============================= */
+header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+}
+
+header h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(0,120,255,0.4);
+}
+
+/* ============================= */
+/*      Container               */
+/* ============================= */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ============================= */
+/*      Cards / Sections        */
+/* ============================= */
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.card h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #7ec8ff;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(126,200,255,0.3);
+}
+
+/* ============================= */
+/*      Form Grid               */
+/* ============================= */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-item label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a0b8d0;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.form-item input,
+.form-item select,
+.form-item textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: #fff;
+  transition: border-color 0.2s;
+}
+
+.form-item input:focus,
+.form-item select:focus,
+.form-item textarea:focus {
+  outline: none;
+  border-color: #7ec8ff;
+  background: rgba(255,255,255,0.12);
+}
+
+.form-item select option {
+  background: #1a2d42;
+  color: #fff;
+}
+
+.form-item textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.checkbox-item {
+  margin-bottom: 16px;
+}
+
+.checkbox-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #c0d4e8;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #7ec8ff;
+}
+
+/* ============================= */
+/*      Pitch Assignments       */
+/* ============================= */
+#pitchAssignments {
+  margin-bottom: 16px;
+}
+
+#pitchAssignments label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #a0b8d0;
+}
+
+#pitchAssignments input {
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: #fff;
+  width: 130px;
+  font-size: 14px;
+}
+
+/* ============================= */
+/*      Buttons                 */
+/* ============================= */
+.button-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+button {
+  background: #006bb3;
+  color: #fff;
+  padding: 11px 22px;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+button:hover {
+  background: #0084db;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* ============================= */
+/*      Fixture List            */
+/* ============================= */
 #fixtureList {
-  max-width: 700px;
-  margin: 10px auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #222;
+  color: #e0e8f0;
 }
 
 .round-block {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #007ACC;
-  page-break-inside: avoid; /* prevent page break inside rounds when printing */
+  border-bottom: 1px solid rgba(126,200,255,0.2);
 }
 
 .round-block h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.4rem;
-  color: #007ACC;
-  border-left: 5px solid #007ACC;
-  padding-left: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  font-family: 'Poppins', sans-serif;
+  color: #7ec8ff;
+  border-left: 4px solid #7ec8ff;
+  padding-left: 0.6rem;
 }
 
 .fixtures-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .fixtures-table td {
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .pitch-cell {
   font-weight: bold;
-  background-color: #f0f8ff;
+  background: rgba(126,200,255,0.1);
   width: 100px;
   text-align: center;
+  color: #7ec8ff;
 }
 
 .match-cell {
-  color: #333;
+  color: #e0e8f0;
 }
 
-@media print {
-  body {
-    margin: 0;
-  }
-  #fixtureList {
-    max-width: 100%;
-  }
-  .round-block {
-    page-break-inside: avoid;
-    border-bottom: 1px solid #999;
-  }
-}
-
+/* ============================= */
+/*      Team Match Lists        */
+/* ============================= */
 #teamMatchLists {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   margin-top: 10px;
-  justify-content: flex-start;
 }
 
 #teamMatchLists > div {
-  background: #e6f0ff;       /* light blue background */
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 70, 200, 0.15); /* subtle blue shadow */
+  background: rgba(126,200,255,0.08);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   padding: 16px 20px;
-  width: 360px;
-  box-sizing: border-box;
-  border: 1px solid #99bbff;  /* medium blue border */
+  width: 280px;
+  border: 1px solid rgba(126,200,255,0.2);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #teamMatchLists > div:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 70, 200, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,100,200,0.3);
 }
 
-#teamMatchLists > div strong {
+#teamMatchLists > div h4 {
   display: block;
-  font-size: 1.3em;
+  font-size: 1.1rem;
+  font-family: 'Poppins', sans-serif;
   margin-bottom: 10px;
-  color: #0046c8;  /* deep blue text */
-  border-bottom: 2px solid #4d79ff;
-  padding-bottom: 6px;
+  color: #7ec8ff;
+  border-bottom: 1px solid rgba(126,200,255,0.3);
+  padding-bottom: 8px;
 }
 
 #teamMatchLists > div div {
-  font-size: 1em;
+  font-size: 0.9rem;
   padding: 4px 0;
-  color: #1a3d99;  /* medium-dark blue */
-  flex-grow: 1;
+  color: #c0d4e8;
 }
 
+/* ============================= */
+/*      Rename Section          */
+/* ============================= */
+#renameTeamSection button {
+  margin-top: 16px;
+}
 
+/* ============================= */
+/*      Print Styles            */
+/* ============================= */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+    padding: 0;
+  }
+  .card {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  button, #renameTeamSection {
+    display: none;
+  }
+  .round-block {
+    page-break-inside: avoid;
+    border-bottom: 1px solid #999;
+  }
+  .fixtures-table td {
+    border: 1px solid #ccc;
+  }
+  .pitch-cell {
+    background: #eee;
+    color: #000;
+  }
+  .match-cell, #teamMatchLists > div div {
+    color: #000;
+  }
+}
+
+/* ============================= */
+/*      Responsive              */
+/* ============================= */
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #teamMatchLists > div {
+    width: 100%;
+  }
+
+  .button-row {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}

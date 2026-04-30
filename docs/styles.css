@@ -19,325 +19,306 @@ body {
   text-align: center;
   padding: 20px 0;
   line-height: 1.4;
-  overflow-x: hidden; /* just in case */
+  overflow-x: hidden;
 }
 
 body::before {
   content: "";
-  position: fixed; /* fixed so it stays during scroll */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4); /* Black overlay at 40% opacity */
-  pointer-events: none; /* so it doesn’t block clicks */
-  z-index: -1; /* behind all content */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: -1;
 }
 
-
 /* ============================= */
-/*      Banner Styles            */
+/*      Header / Logo           */
 /* ============================= */
 header {
-  position: relative;
   text-align: center;
   margin-bottom: 20px;
 }
 
 .banner-images {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  position: relative;
-  margin: 0 10%;
-}
-
-.banner-image-left, .banner-image-right {
-  width: 150px; /* Square dimensions */
-  height: 150px;
-  object-fit: cover;
-  border-radius: 15px; /* Rounded edges for a more polished look */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); /* Soft shadow for depth */
-}
-
-.banner-image-left {
-  transform: translateX(-10%); /* Move to the left */
-}
-
-.banner-image-right {
-  transform: translateX(10%); /* Move to the right */
 }
 
 .logo {
-  width: 550px;       /* Adjust width to make image bigger */
-  height: auto;       /* Maintain aspect ratio */
-  border-radius: 15px; /* Rounded corners */
-  display: block;     /* Optional: so it behaves like a block element */
-  margin: 0 auto;     /* Optional: center the image horizontally */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: subtle shadow */
-}
-
-
-h1 {
-  font-size: 3.5em;
-  color: #ffffff;
-  text-transform: uppercase;
-  font-weight: bold;
-  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
-  margin-top: 10px;
-}
-
-/* ============================= */
-/*      Main Content Wrapper     */
-/* ============================= */
-.main-content {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  max-width: 1200px;
+  width: min(550px, 90%);
+  height: auto;
+  border-radius: 15px;
+  display: block;
   margin: 0 auto;
-  padding: 0 20px;
-  flex-wrap: wrap;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 /* ============================= */
-/*      Table Section Styles     */
+/*      Controls Bar            */
 /* ============================= */
-.league-table, .fixtures-results {
-  flex: 1 1 48%;
-  min-width: 300px;
-  background-color: #fff; /* White background */
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* lighter shadow for subtle depth */
-  margin-bottom: 20px;
+.public-controls {
+  width: min(900px, 94%);
+  margin: 0 auto 20px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.374);
+  border-radius: 14px;
 }
 
-.league-table {
-  flex: 1 1 58%;
-}
-
-h2 {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.8rem;
+.controls-title {
+  text-align: center;
   font-weight: 600;
-  color: #222;
-  margin: 10px 0 15px 0;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  text-align: left; /* or center */
-}
-
-
-/* Table styles */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #fff;
-  color: #222;
-  box-shadow: none; /* remove old shadows */
-  font-family: 'Poppins', sans-serif;
-}
-
-th, td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #eee; /* very thin light gray line */
-  font-weight: 500;
-}
-
-th {
-  background-color: #fff; /* keep header white */
-  color: #555; /* softer dark for headings */
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  font-weight: 700;
-  border-bottom: 2px solid #ddd; /* slightly thicker line below header */
-}
-
-tr:last-child td {
-  border-bottom: none; /* no border after last row */
-}
-
-tr:hover td {
-  background-color: #f9f9f9; /* subtle hover effect */
-  cursor: default;
-}
-
-
-table {
-  border-radius: 10px;
-  overflow: hidden; /* Ensures rounded corners apply to inner rows */
-}
-
-
-/* Fixtures & Results */
-ul {
-  list-style: none;
-  margin-top: 20px;
-  padding: 0;
-}
-
-li {
-  font-size: 1.2em;
-  color: #003366;
-  background-color: #e5f2ff;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
-
-/* ============================= */
-/*      Footer / Controls        */
-/* ============================= */
-footer {
-  max-width: 1200px;
-  margin: 30px auto 0;
-  padding: 0 20px;
-}
-
-.auto-cycle {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 10px;
-}
-
-.auto-cycle label {
-  font-size: 1.1em;
+  margin-bottom: 12px;
+  font-size: 1rem;
   color: #fff;
 }
 
-.auto-cycle select,
-.auto-cycle input[type="checkbox"] {
-  padding: 12px;
-  border-radius: 5px;
-  font-size: 1.1em;
+.controls-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.control-item label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.control-item select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #fff;
   color: #003366;
-  background-color: #f4f4f4;
-  border: 1px solid #ddd;
 }
 
 /* ============================= */
-/*      Button Styling           */
+/*      Main Content Grid       */
 /* ============================= */
-button {
-  background-color: #006bb3;
+.mobile-tournament-layout {
+  width: min(1100px, 94%);
+  margin: 0 auto 30px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* ============================= */
+/*      Cards                   */
+/* ============================= */
+.card {
+  background: rgba(255, 255, 255, 0.447);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.card h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+/* ============================= */
+/*      League Table            */
+/* ============================= */
+#table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  color: #222;
+}
+
+#table th,
+#table td {
+  padding: 8px 6px;
+  text-align: center;
+}
+
+#table th {
+  background-color: #fff;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  border-bottom: 2px solid #ddd;
+  font-size: 12px;
+}
+
+#table td {
+  border-bottom: 1px solid #eee;
+}
+
+#table tr:last-child td {
+  border-bottom: none;
+}
+
+#table tr:hover td {
+  background-color: #f9f9f9;
+}
+
+/* ============================= */
+/*      Fixtures & Results      */
+/* ============================= */
+#fixtures-list,
+#results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#fixtures-list li,
+#results-list li {
+  padding: 10px;
+  margin: 6px 0;
+  border-bottom: 1px solid rgba(0,51,102,0.15);
+  text-align: center;
+  font-size: 0.95rem;
+  color: #003366;
+  background: rgba(255,255,255,0.7);
+  border-radius: 8px;
+}
+
+#fixtures-list li:last-child,
+#results-list li:last-child {
+  border-bottom: none;
+}
+
+/* ============================= */
+/*      Knockout Stages         */
+/* ============================= */
+#knockout-display {
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.knockout-card {
+  color: #333;
+}
+
+.knockout-match {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.final-match {
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid #4CAF50;
+}
+
+.knockout-divider {
+  text-align: center;
+  margin: 12px 0 6px;
+  font-weight: bold;
+  font-size: 16px;
+  color: #222;
+}
+
+.winner {
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.winner-banner {
+  margin-top: 12px;
+  padding: 10px;
+  background: #4CAF50;
   color: white;
-  padding: 12px 25px;
-  font-size: 1.2em;
-  border: none;
-  border-radius: 6px;
+  font-weight: bold;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* ============================= */
+/*      Footer                  */
+/* ============================= */
+footer {
+  max-width: 1100px;
+  margin: 0 auto 20px;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.auto-cycle-toggle {
+  display: inline-block;
+  padding: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 15px;
-}
-
-button:hover {
-  background-color: #00588c;
+  color: #fff;
 }
 
 /* ============================= */
-/*      Responsive Adjustments    */
+/*      BG Overlay Image        */
 /* ============================= */
-@media (max-width: 768px) {
-  .main-content {
-      flex-direction: column;
-      align-items: center;
-  }
-  .league-table,
-  .fixtures-results {
-      width: 90%;
-      margin-bottom: 30px;
-  }
-}
-
 .bg-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
   pointer-events: none;
   z-index: -1;
   object-fit: cover;
-  opacity: 0.3; /* control transparency */
+  opacity: 0.3;
 }
 
-/* === MOBILE RESPONSIVE STYLES === */
-@media (max-width: 768px) {
-
-  body {
-    padding: 10px;
-    font-size: 14px;
-    overflow-x: hidden;
+/* ============================= */
+/*      Tablet (2-col grid)     */
+/* ============================= */
+@media (min-width: 600px) {
+  .controls-row {
+    grid-template-columns: repeat(4, 1fr);
   }
 
-  .main-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  .mobile-tournament-layout {
+    grid-template-columns: 1.2fr 1fr 1fr;
   }
 
-  .league-table,
-  .fixtures-results {
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  table {
-    font-size: 12px;
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th, td {
-    padding: 6px;
-    text-align: center;
-  }
-
-  .fixtures-results h2,
-  .league-table h2 {
-    text-align: center;
-    font-size: 1.2rem;
-  }
-
-  .logo {
-    width: 100%;
-    height: auto;
-    max-width: 300px;
-    display: block;
-    margin: 0 auto;
-  }
-
-  .auto-cycle {
-    padding: 10px;
-    text-align: center;
-  }
-
-  .age-group-selection {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .age-group-selection label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  footer {
-    padding: 20px 10px;
-  }
-
-  ul#fixtures-list, ul#results-list {
-    padding-left: 20px;
-    font-size: 14px;
+  .knockout-card {
+    grid-column: 1 / -1;
   }
 }
 
+/* ============================= */
+/*      Desktop tweaks          */
+/* ============================= */
+@media (min-width: 900px) {
+  .card h2 {
+    font-size: 1.6rem;
+  }
+
+  #table {
+    font-size: 15px;
+  }
+
+  #table th, #table td {
+    padding: 10px 8px;
+  }
+}
+#table tr.qualification-place td {
+  background-color: rgba(46, 125, 50, 0.15);
+}

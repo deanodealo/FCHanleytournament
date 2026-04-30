@@ -6,25 +6,38 @@ import {
   loadTeams  // <-- added loadTeams import
 } from './FIXTURES/firebasehelpers.js';
 import { database } from './FIXTURES/firebase.js';
+import { ref, onValue, off } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
 // ===== Constants =====
+
 const STORAGE_KEY = 'tournamentData';
 let tournamentData = {};  // initially empty
+let activeTournamentRef = null;
 
-async function loadAllDataFromFirebase() {
-  const ages = ['U7', 'U8', 'U9', 'U10'];
-  for (const age of ages) {
-    const [fixtures, results, teams] = await Promise.all([
-      loadFixtures(age),
-      loadResults(age),
-      loadTeams(age)
-    ]);
-    tournamentData[age] = {
-      fixtures: fixtures || [],
-      results: results || [],
-      teams: teams || []
-    };
+function listenToSelectedDataFromFirebase() {
+  const day = document.getElementById("day-select").value;
+  const session = document.getElementById("session-select").value;
+  const age = document.getElementById("age-group-select").value;
+
+  const path = `tournamentData/${day}/${session}/${age}`;
+
+  if (activeTournamentRef) {
+    off(activeTournamentRef);
   }
+
+  activeTournamentRef = ref(database, path);
+
+  onValue(activeTournamentRef, snapshot => {
+    const data = snapshot.val() || {};
+
+    tournamentData[age] = {
+      fixtures: data.fixtures || [],
+      results: data.results || [],
+      teams: data.teams || []
+    };
+
+    refreshAll(age);
+  });
 }
 
 // ===== DOM Elements =====
@@ -33,15 +46,11 @@ const resultsList = document.getElementById('results-list');
 const fixturesList = document.getElementById('fixtures-list');
 const ageGroupHeader = document.getElementById('age-group-header');
 const ageGroupSelect = document.getElementById('age-group-select');
-const autoCycleCheckbox = document.getElementById('auto-cycle');
-const u7Checkbox = document.getElementById('u7-checkbox');
-const u8Checkbox = document.getElementById('u8-checkbox');
-const u9Checkbox = document.getElementById('u9-checkbox');
-const u10Checkbox = document.getElementById('u10-checkbox');
+const groupSelect = document.getElementById('group-select');
+
 
 let ageGroups = ['U7', 'U8', 'U9', 'U10'];
-let currentAgeIndex = 0;
-let cycleInterval = null;
+
 
 // ===== Helper Functions =====
 
@@ -53,8 +62,30 @@ function ensureAgeGroupExists(age) {
 
 function calculateLeagueTable(age) {
   ensureAgeGroupExists(age);
-  const teams = tournamentData[age].teams || [];
-  const results = tournamentData[age].results || [];
+  const selectedGroup = groupSelect.value;
+
+  const fixtures = tournamentData[age].fixtures || [];
+
+  const groupTeams = fixtures
+    .filter(fixture => selectedGroup === "all" || fixture.group === selectedGroup)
+    .flatMap(fixture => [fixture.team1, fixture.team2]);
+
+  const teams = selectedGroup === "all"
+    ? tournamentData[age].teams || []
+    : [...new Set(groupTeams)];
+
+  const results = (tournamentData[age].results || []).filter(result => {
+    if (selectedGroup === "all") return true;
+
+    const matchingFixture = fixtures.find(fixture =>
+      fixture.team1 === result.team1 &&
+      fixture.team2 === result.team2 &&
+      fixture.time === result.time &&
+      fixture.pitch === result.pitch
+    );
+
+    return matchingFixture?.group === selectedGroup;
+  });
 
   const stats = {};
 
@@ -118,8 +149,8 @@ function renderLeagueTable(age) {
   tableBody.innerHTML = stats.length
     ? stats
         .map(
-          team => `
-        <tr>
+          (team, index) => `
+        <tr class="${index < 2 ? 'qualification-place' : ''}">
           <td>${team.team}</td>
           <td>${team.played}</td>
           <td>${team.won}</td>
@@ -136,19 +167,24 @@ function renderLeagueTable(age) {
 
 function renderFixtures(age) {
   ensureAgeGroupExists(age);
-  const fixtures = tournamentData[age].fixtures || [];
+  const selectedGroup = groupSelect.value;
+
+const fixtures = (tournamentData[age].fixtures || []).filter(fixture => {
+  if (selectedGroup === "all") return true;
+  return fixture.group === selectedGroup;
+});
   const results = tournamentData[age].results || [];
 
   const unplayedFixtures = fixtures.filter(fixture => {
     return !results.some(result => {
-      if (!result || !result.fixture) return false;
-      const r = result.fixture;
-      return (
-        r.team1 === fixture.team1 &&
-        r.team2 === fixture.team2 &&
-        r.time === fixture.time &&
-        r.pitch === fixture.pitch
-      );
+      if (!result) return false;
+
+return (
+  result.team1 === fixture.team1 &&
+  result.team2 === fixture.team2 &&
+  result.time === fixture.time &&
+  result.pitch === fixture.pitch
+);
     });
   });
 
@@ -167,6 +203,64 @@ function renderFixtures(age) {
   : '<li>No upcoming fixtures.</li>';
 }
 
+function generateSemiFinals(age) {
+  const groupA = tournamentData[age].fixtures.filter(fixture => fixture.group === "Group A");
+  const groupB = tournamentData[age].fixtures.filter(fixture => fixture.group === "Group B");
+
+  // Get top 2 teams from each group (based on points, goal difference)
+  const groupATop2 = getTop2Teams(groupA, age);
+  const groupBTop2 = getTop2Teams(groupB, age);
+
+  // Create semi-final fixtures
+  const semiFinals = [
+    { team1: groupATop2[0], team2: groupBTop2[1] },
+    { team1: groupBTop2[0], team2: groupATop2[1] }
+  ];
+
+  return semiFinals;
+}
+
+function getTop2Teams(groupFixtures, age) {
+  const results = tournamentData[age].results || [];
+
+  // Calculate points, goal difference, etc. (or use an existing league table logic)
+  const stats = {};
+  groupFixtures.forEach(fixture => {
+    const result = results.find(result =>
+      result.team1 === fixture.team1 && result.team2 === fixture.team2
+    );
+
+    if (!result) return;
+
+    if (!stats[fixture.team1]) stats[fixture.team1] = { points: 0, goalDifference: 0 };
+    if (!stats[fixture.team2]) stats[fixture.team2] = { points: 0, goalDifference: 0 };
+
+    // Update points and goal difference based on the result
+    if (result.team1Score > result.team2Score) {
+      stats[fixture.team1].points += 3;
+    } else if (result.team2Score > result.team1Score) {
+      stats[fixture.team2].points += 3;
+    } else {
+      stats[fixture.team1].points += 1;
+      stats[fixture.team2].points += 1;
+    }
+
+    stats[fixture.team1].goalDifference += result.team1Score - result.team2Score;
+    stats[fixture.team2].goalDifference += result.team2Score - result.team1Score;
+  });
+
+  // Sort teams by points, goal difference, and then goals scored
+  const sortedTeams = Object.keys(stats).sort((a, b) => {
+    const teamA = stats[a];
+    const teamB = stats[b];
+
+    if (teamA.points !== teamB.points) return teamB.points - teamA.points;
+    return teamB.goalDifference - teamA.goalDifference;
+  });
+
+  return sortedTeams.slice(0, 2);
+}
+
 function formatISOTimeTo12Hour(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -180,7 +274,22 @@ function formatISOTimeTo12Hour(isoString) {
 
 function renderResults(age) {
   ensureAgeGroupExists(age);
-  const results = tournamentData[age].results || [];
+  const selectedGroup = groupSelect.value;
+
+  const fixtures = tournamentData[age].fixtures || [];
+
+const results = (tournamentData[age].results || []).filter(result => {
+  if (selectedGroup === "all") return true;
+
+  const matchingFixture = fixtures.find(fixture =>
+    fixture.team1 === result.team1 &&
+    fixture.team2 === result.team2 &&
+    fixture.time === result.time &&
+    fixture.pitch === result.pitch
+  );
+
+  return matchingFixture?.group === selectedGroup;
+});
 
   if (results.length === 0) {
     resultsList.innerHTML = '<li>No results recorded.</li>';
@@ -213,68 +322,112 @@ function refreshAll(age) {
     tournamentData[age].fixtures.length ||
     tournamentData[age].results.length;
 
-  if (!hasData) {
-    tableBody.innerHTML = `<tr><td colspan="7">No data for ${age} yet.</td></tr>`;
-    resultsList.innerHTML = '<li>No results recorded.</li>';
-    fixturesList.innerHTML = '<li>No upcoming fixtures.</li>';
-    return;
+if (!hasData) {
+  tableBody.innerHTML = `<tr><td colspan="7">No data for ${age} yet.</td></tr>`;
+  resultsList.innerHTML = '<li>No results recorded.</li>';
+  fixturesList.innerHTML = '<li>No upcoming fixtures.</li>';
+
+  const knockoutDiv = document.getElementById("knockout-display");
+  if (knockoutDiv) {
+    knockoutDiv.innerHTML = "Knockout stages will appear once group games are complete.";
   }
+
+  return;
+}
 
   renderLeagueTable(age);
   renderResults(age);
   renderFixtures(age);
+  renderSemiFinals(age);
 }
 
-function cycleAgeGroups() {
-  if (cycleInterval) clearInterval(cycleInterval);
-  if (!autoCycleCheckbox.checked) return;
+function renderSemiFinals(age) {
+  const knockoutDiv = document.getElementById("knockout-display");
+  const results = tournamentData[age].results || [];
 
-  const selectedAgeGroups = [];
-  if (u7Checkbox.checked) selectedAgeGroups.push('U7');
-  if (u8Checkbox.checked) selectedAgeGroups.push('U8');
-  if (u9Checkbox.checked) selectedAgeGroups.push('U9');
-  if (u10Checkbox.checked) selectedAgeGroups.push('U10');
+  const knockoutResults = results.filter(r => r.type === "knockout");
 
-  if (selectedAgeGroups.length === 0) return;
+  knockoutDiv.innerHTML = "";
 
-  cycleInterval = setInterval(() => {
-    currentAgeIndex = (currentAgeIndex + 1) % selectedAgeGroups.length;
-    const newAge = selectedAgeGroups[currentAgeIndex];
-    ageGroupSelect.value = newAge;
-    refreshAll(newAge);
-  }, 10000);
+  if (knockoutResults.length === 0) {
+    knockoutDiv.innerHTML = "Knockout stages will appear once group games are complete.";
+    return;
+  }
+
+  const semiFinal1 = knockoutResults.find(r => r.stage === "Semi Final 1");
+  const semiFinal2 = knockoutResults.find(r => r.stage === "Semi Final 2");
+  const final = knockoutResults.find(r => r.stage === "Final");
+
+  const getWinner = (match) => {
+    if (!match) return null;
+    return match.team1Score > match.team2Score ? match.team1 : match.team2;
+  };
+
+  const createMatch = (title, match, isFinal = false) => {
+    if (!match) {
+      return `<div class="knockout-match">${title}: TBD</div>`;
+    }
+
+    const winner = getWinner(match);
+
+    return `
+      <div class="knockout-match ${isFinal ? 'final-match' : ''}">
+        <strong>${title}</strong><br/>
+        <span class="${winner === match.team1 ? 'winner' : ''}">
+          ${match.team1}
+        </span>
+        ${match.team1Score} - ${match.team2Score}
+        <span class="${winner === match.team2 ? 'winner' : ''}">
+          ${match.team2}
+        </span>
+      </div>
+    `;
+  };
+
+  const finalWinner = getWinner(final);
+
+  knockoutDiv.innerHTML = `
+    ${createMatch("Semi Final 1", semiFinal1)}
+    ${createMatch("Semi Final 2", semiFinal2)}
+
+    <div class="knockout-divider">Final</div>
+
+    ${createMatch("Final", final, true)}
+
+    ${
+      finalWinner
+        ? `<div class="winner-banner">🏆 Winner: ${finalWinner}</div>`
+        : ''
+    }
+  `;
 }
+
+
 
 // ===== Event Listeners =====
 
-ageGroupSelect.addEventListener('change', () => {
+ageGroupSelect.addEventListener('change', async () => {
+  listenToSelectedDataFromFirebase();
+});
+
+document.getElementById("day-select").addEventListener("change", async () => {
+  listenToSelectedDataFromFirebase();
+});
+
+document.getElementById("session-select").addEventListener("change", async () => {
+  listenToSelectedDataFromFirebase();
+});
+
+groupSelect.addEventListener("change", () => {
   const selectedAge = ageGroupSelect.value;
-  currentAgeIndex = ageGroups.indexOf(selectedAge);
   refreshAll(selectedAge);
 });
 
-autoCycleCheckbox.addEventListener('change', () => {
-  if (autoCycleCheckbox.checked) {
-    cycleAgeGroups();
-  } else if (cycleInterval) {
-    clearInterval(cycleInterval);
-    cycleInterval = null;
-  }
-});
-
-[u7Checkbox, u8Checkbox, u9Checkbox, u10Checkbox].forEach(checkbox =>
-  checkbox.addEventListener('change', cycleAgeGroups)
-);
 
 // ===== Initial Load =====
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   const initialAge = ageGroupSelect.value;
-  currentAgeIndex = ageGroups.indexOf(initialAge);
 
-  // Load all data from Firebase
-  await loadAllDataFromFirebase();
-
-  // Now refresh UI with loaded data
-  refreshAll(initialAge);
+  listenToSelectedDataFromFirebase();
 });
