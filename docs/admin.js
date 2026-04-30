@@ -93,22 +93,22 @@ function getSelectedTournamentPath() {
 function ensureSelectedTournamentData(data) {
   const { day, session, ageGroup } = getSelectedTournamentPath();
 
+  const toArray = val => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    return Object.values(val);
+  };
+
   data[day] = data[day] || {};
   data[day][session] = data[day][session] || {};
   data[day][session][ageGroup] = data[day][session][ageGroup] || {};
 
-  data[day][session][ageGroup].teams =
-    data[day][session][ageGroup].teams || [];
-
-  data[day][session][ageGroup].fixtures =
-    data[day][session][ageGroup].fixtures || [];
-
-  data[day][session][ageGroup].results =
-    data[day][session][ageGroup].results || [];
+  data[day][session][ageGroup].teams    = toArray(data[day][session][ageGroup].teams);
+  data[day][session][ageGroup].fixtures = toArray(data[day][session][ageGroup].fixtures);
+  data[day][session][ageGroup].results  = toArray(data[day][session][ageGroup].results);
 
   return data[day][session][ageGroup];
 }
-
 
 // Update team dropdowns
 function updateTeamDropdowns(teams) {

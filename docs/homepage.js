@@ -27,13 +27,19 @@ function listenToSelectedDataFromFirebase() {
 
   activeTournamentRef = ref(database, path);
 
+  const toArray = val => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    return Object.values(val);
+  };
+
   onValue(activeTournamentRef, snapshot => {
     const data = snapshot.val() || {};
 
     tournamentData[age] = {
-      fixtures: data.fixtures || [],
-      results: data.results || [],
-      teams: data.teams || []
+      fixtures: toArray(data.fixtures),
+      results: toArray(data.results),
+      teams: toArray(data.teams)
     };
 
     refreshAll(age);
@@ -344,16 +350,62 @@ if (!hasData) {
 function renderSemiFinals(age) {
   const knockoutDiv = document.getElementById("knockout-display");
   const results = tournamentData[age].results || [];
-
-  const knockoutResults = results.filter(r => r.type === "knockout");
+  const fixtures = tournamentData[age].fixtures || [];
 
   knockoutDiv.innerHTML = "";
 
-  if (knockoutResults.length === 0) {
+  // Calculate knockout fixtures from group standings
+  const groupAFixtures = fixtures.filter(f => f.group === "Group A");
+  const groupBFixtures = fixtures.filter(f => f.group === "Group B");
+
+  if (groupAFixtures.length === 0 || groupBFixtures.length === 0) {
     knockoutDiv.innerHTML = "Knockout stages will appear once group games are complete.";
     return;
   }
 
+  const allGroupResultsComplete = fixtures.every(fixture =>
+    results.some(result =>
+      result.team1 === fixture.team1 &&
+      result.team2 === fixture.team2 &&
+      result.time === fixture.time &&
+      result.pitch === fixture.pitch
+    )
+  );
+
+  if (!allGroupResultsComplete) {
+    knockoutDiv.innerHTML = "Knockout stages will appear once all group games are complete.";
+    return;
+  }
+
+  // Use existing admin logic to derive standings
+  const calcStandings = (groupFixtures) => {
+    const table = {};
+    groupFixtures.forEach(f => {
+      if (!table[f.team1]) table[f.team1] = { team: f.team1, points: 0, gd: 0, gf: 0 };
+      if (!table[f.team2]) table[f.team2] = { team: f.team2, points: 0, gd: 0, gf: 0 };
+    });
+    results.forEach(r => {
+      const match = groupFixtures.find(f =>
+        f.team1 === r.team1 && f.team2 === r.team2 &&
+        f.time === r.time && f.pitch === r.pitch
+      );
+      if (!match) return;
+      const s1 = r.team1Score, s2 = r.team2Score;
+      table[r.team1].gf += s1; table[r.team1].gd += s1 - s2;
+      table[r.team2].gf += s2; table[r.team2].gd += s2 - s1;
+      if (s1 > s2) { table[r.team1].points += 3; }
+      else if (s2 > s1) { table[r.team2].points += 3; }
+      else { table[r.team1].points += 1; table[r.team2].points += 1; }
+    });
+    return Object.values(table).sort((a, b) =>
+      b.points - a.points || b.gd - a.gd || b.gf - a.gf
+    );
+  };
+
+  const groupAStandings = calcStandings(groupAFixtures);
+  const groupBStandings = calcStandings(groupBFixtures);
+
+  const knockoutResults = results.filter(r => r.type === "knockout");
   const semiFinal1 = knockoutResults.find(r => r.stage === "Semi Final 1");
   const semiFinal2 = knockoutResults.find(r => r.stage === "Semi Final 2");
   const final = knockoutResults.find(r => r.stage === "Final");
@@ -363,42 +415,38 @@ function renderSemiFinals(age) {
     return match.team1Score > match.team2Score ? match.team1 : match.team2;
   };
 
-  const createMatch = (title, match, isFinal = false) => {
-    if (!match) {
-      return `<div class="knockout-match">${title}: TBD</div>`;
+  const createMatch = (title, team1, team2, result, isFinal = false) => {
+    if (!result) {
+      return `
+        <div class="knockout-match ${isFinal ? 'final-match' : ''}">
+          <strong>${title}</strong><br/>
+          <span>${team1}</span> vs <span>${team2}</span>
+        </div>`;
     }
-
-    const winner = getWinner(match);
-
+    const winner = getWinner(result);
     return `
       <div class="knockout-match ${isFinal ? 'final-match' : ''}">
         <strong>${title}</strong><br/>
-        <span class="${winner === match.team1 ? 'winner' : ''}">
-          ${match.team1}
-        </span>
-        ${match.team1Score} - ${match.team2Score}
-        <span class="${winner === match.team2 ? 'winner' : ''}">
-          ${match.team2}
-        </span>
-      </div>
-    `;
+        <span class="${winner === result.team1 ? 'winner' : ''}">${result.team1}</span>
+        ${result.team1Score} - ${result.team2Score}
+        <span class="${winner === result.team2 ? 'winner' : ''}">${result.team2}</span>
+      </div>`;
   };
 
+  const sf1Team1 = groupAStandings[0]?.team || "TBD";
+  const sf1Team2 = groupBStandings[1]?.team || "TBD";
+  const sf2Team1 = groupBStandings[0]?.team || "TBD";
+  const sf2Team2 = groupAStandings[1]?.team || "TBD";
+
   const finalWinner = getWinner(final);
+  const finalTeam1 = semiFinal1 ? getWinner(semiFinal1) : "SF1 Winner";
+  const finalTeam2 = semiFinal2 ? getWinner(semiFinal2) : "SF2 Winner";
 
   knockoutDiv.innerHTML = `
-    ${createMatch("Semi Final 1", semiFinal1)}
-    ${createMatch("Semi Final 2", semiFinal2)}
-
-    <div class="knockout-divider">Final</div>
-
-    ${createMatch("Final", final, true)}
-
-    ${
-      finalWinner
-        ? `<div class="winner-banner">🏆 Winner: ${finalWinner}</div>`
-        : ''
-    }
+    ${createMatch("Semi Final 1", sf1Team1, sf1Team2, semiFinal1)}
+    ${createMatch("Semi Final 2", sf2Team1, sf2Team2, semiFinal2)}
+    ${createMatch("Final", finalTeam1, finalTeam2, final, true)}
+    ${finalWinner ? `<div class="winner-banner">🏆 Will Brazier Festival of Football Champions!: ${finalWinner}</div>` : ''}
   `;
 }
 
