@@ -98,7 +98,11 @@ function scheduleMatchTimes(
     let matchesThisSlot = 0;
 
     // Sort matches so teams that have waited longest are prioritised
-   const candidates = [...unscheduled].sort((a, b) => {
+const candidates = [...unscheduled].sort((a, b) => {
+  // Primary: keep rounds in order so all teams finish together
+  if ((a.round ?? 0) !== (b.round ?? 0)) return (a.round ?? 0) - (b.round ?? 0);
+
+  // Secondary: teams that have waited longest get priority within a round
   const [a1, a2] = a.match || a;
   const [b1, b2] = b.match || b;
 
@@ -309,9 +313,10 @@ for (let i = 0; i < numberOfGroups; i++) {
   if (groupTeams.length < 2) continue;
 
   const groupName = `Group ${String.fromCharCode(65 + groupCount)}`; // Dynamically create group names like Group A, Group B, etc.
-  const generatedFixtures = generateRoundRobin(groupTeams).map(match => ({
-    group: groupName, // Assign each fixture to the correct group
-    match
+  const generatedFixtures = generateRoundRobin(groupTeams).map(f => ({
+    group: groupName,
+    match: f.match,
+    round: f.round
   }));
 
   groupFixtures.push(...generatedFixtures);
@@ -376,10 +381,24 @@ scheduledAll.push({ ageGroup: currentAgeGroup, scheduled, teams });
 
 // Round-robin fixture generator (this is the correct one)
 function generateRoundRobin(teams) {
+  const teamList = teams.length % 2 === 0 ? [...teams] : [...teams, null];
+  const size = teamList.length;
+  const rounds = size - 1;
+  const half = size / 2;
   const fixtures = [];
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      fixtures.push([teams[i], teams[j]]);
+  const rotating = teamList.slice(1);
+
+  for (let round = 0; round < rounds; round++) {
+    const rotated = [
+      teamList[0],
+      ...rotating.slice(rotating.length - round).concat(rotating.slice(0, rotating.length - round))
+    ];
+    for (let i = 0; i < half; i++) {
+      const t1 = rotated[i];
+      const t2 = rotated[size - 1 - i];
+      if (t1 && t2) {
+        fixtures.push({ match: [t1, t2], round });
+      }
     }
   }
   return fixtures;
