@@ -156,8 +156,8 @@ function renderLeagueTable(age) {
           <td>${team.won}</td>
           <td>${team.drawn}</td>
           <td>${team.lost}</td>
-          <td>${team.points}</td>
           <td>${team.goalDifference}</td>
+          <td>${team.points}</td>
         </tr>
       `
         )
