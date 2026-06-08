@@ -41,7 +41,7 @@
     </section>
 
     <!-- Collapsible Fixtures Display -->
-    <details id="fixtures-section" class="control-group">
+    <details id="fixtures-section" class="control-group" style="display:none">
       <summary>Fixtures</summary>
       <div id="fixture-display">Select an age group to see fixtures here.</div>
     </details>
@@ -49,7 +49,7 @@
     <div class="admin-controls">
 
       <!-- Collapsible Add Team -->
-      <details class="control-group">
+      <details class="control-group" style="display:none">
         <summary>Add Team</summary>
 
         <label for="team-name">Team Name:</label>
@@ -61,7 +61,7 @@
       </details>
 
       <!-- Collapsible Add Fixture -->
-      <details class="control-group">
+      <details class="control-group" style="display:none">
         <summary>Add Fixture</summary>
 
         <form id="fixture-form">
@@ -107,6 +107,24 @@
 
         <ul id="results-list"></ul>
       </form>
+
+      <!-- Edit Result -->
+<details class="control-group">
+  <summary>Edit Result</summary>
+
+  <label for="edit-result-fixture">Select Fixture:</label>
+  <select id="edit-result-fixture">
+    <option value="">-- Select a fixture with a result --</option>
+  </select>
+
+  <label for="edit-result-team1-score">Team 1 Score:</label>
+  <input type="number" id="edit-result-team1-score" min="0" placeholder="0">
+
+  <label for="edit-result-team2-score">Team 2 Score:</label>
+  <input type="number" id="edit-result-team2-score" min="0" placeholder="0">
+
+  <button type="button" id="edit-result-btn">Update Result</button>
+</details>
 
       <!-- Knockout Results -->
       <section id="knockout-results-section" class="control-group">

@@ -556,6 +556,7 @@ async function updateLeagueTable(ageGroup) {
     renderFixtures(ageGroup);
     renderResults(ageGroup);
     updateLeagueTable(ageGroup);
+    populateEditResultDropdown();
   });
 });
 
@@ -783,6 +784,122 @@ resetButton.addEventListener("click", async () => {
   alert(`Tournament data reset for ${day} / ${session} / ${ageGroup}.`);
 });
 
+// ── Edit Result ──────────────────────────────────────────
+const editResultFixtureSelect = document.getElementById("edit-result-fixture");
+const editResultTeam1Score = document.getElementById("edit-result-team1-score");
+const editResultTeam2Score = document.getElementById("edit-result-team2-score");
+const editResultBtn = document.getElementById("edit-result-btn");
+
+async function populateEditResultDropdown() {
+  const data = await getTournamentData();
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+
+  const fixtures = data[day]?.[session]?.[ageGroup]?.fixtures || [];
+  const results  = data[day]?.[session]?.[ageGroup]?.results  || [];
+
+  editResultFixtureSelect.innerHTML = "<option value=\"\">-- Select a fixture with a result --</option>";
+  editResultTeam1Score.value = "";
+  editResultTeam2Score.value = "";
+
+  fixtures.forEach((fixture, index) => {
+    const result = results.find(r =>
+      r.team1 === fixture.team1 &&
+      r.team2 === fixture.team2 &&
+      r.time  === fixture.time  &&
+      r.pitch === fixture.pitch
+    );
+    if (!result) return;
+
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = `${fixture.team1} vs ${fixture.team2} at ${formatTime(fixture.time)} (${result.team1Score} - ${result.team2Score})`;
+    editResultFixtureSelect.appendChild(option);
+  });
+}
+
+// When a fixture is selected, load current scores
+editResultFixtureSelect.addEventListener("change", async () => {
+  const index = editResultFixtureSelect.value;
+  if (index === "") {
+    editResultTeam1Score.value = "";
+    editResultTeam2Score.value = "";
+    return;
+  }
+
+  const data = await getTournamentData();
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+
+  const fixtures = data[day]?.[session]?.[ageGroup]?.fixtures || [];
+  const results  = data[day]?.[session]?.[ageGroup]?.results  || [];
+  const fixture  = fixtures[index];
+
+  const result = results.find(r =>
+    r.team1 === fixture.team1 &&
+    r.team2 === fixture.team2 &&
+    r.time  === fixture.time  &&
+    r.pitch === fixture.pitch
+  );
+
+  if (result) {
+    editResultTeam1Score.value = result.team1Score;
+    editResultTeam2Score.value = result.team2Score;
+  }
+});
+
+// Save updated result
+editResultBtn.addEventListener("click", async () => {
+  const index = editResultFixtureSelect.value;
+  if (index === "") {
+    alert("Please select a fixture.");
+    return;
+  }
+
+  const score1 = editResultTeam1Score.value;
+  const score2 = editResultTeam2Score.value;
+
+  if (score1 === "" || score2 === "") {
+    alert("Please enter both scores.");
+    return;
+  }
+
+  const data = await getTournamentData();
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+  const groupData = ensureSelectedTournamentData(data);
+
+  const fixture = groupData.fixtures[index];
+  if (!fixture) {
+    alert("Invalid fixture.");
+    return;
+  }
+
+  const existingIndex = groupData.results.findIndex(r =>
+    r.team1 === fixture.team1 &&
+    r.team2 === fixture.team2 &&
+    r.time  === fixture.time  &&
+    r.pitch === fixture.pitch
+  );
+
+  if (existingIndex === -1) {
+    alert("No existing result found for this fixture.");
+    return;
+  }
+
+  groupData.results[existingIndex] = {
+    ...groupData.results[existingIndex],
+    team1Score: parseInt(score1, 10),
+    team2Score: parseInt(score2, 10)
+  };
+
+  await saveTournamentData(data);
+
+  await populateEditResultDropdown();
+  await renderResults(ageGroup);
+  await updateLeagueTable(ageGroup);
+
+  alert("Result updated successfully.");
+});
+
+
 // Initial load
 document.addEventListener("DOMContentLoaded", () => {
   const ageGroup = ageGroupSelect.value;
@@ -790,4 +907,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFixtures(ageGroup);
   renderResults(ageGroup);
   updateLeagueTable(ageGroup);
+  populateEditResultDropdown();
 });
