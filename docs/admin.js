@@ -694,6 +694,7 @@ const currentAgeGroup = ageGroupSelect.value;
 await renderFixtures(currentAgeGroup);
 await renderResults(currentAgeGroup);
 await updateLeagueTable(currentAgeGroup);
+await populateEditResultDropdown();
 });
 
 // Add Knockout Result
