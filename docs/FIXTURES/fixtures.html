@@ -89,6 +89,15 @@
 
       <div class="form-item">
         <label for="teamNames">Team Names (one per line)</label>
+
+        <!-- ── CSV IMPORT ── -->
+        <div class="import-row">
+          <input type="file" id="csvImportInput" accept=".csv" style="display:none">
+          <button type="button" id="importCsvBtn">⬆ Import from Registration CSV</button>
+          <span class="import-hint">Imports team names matching the selected age group(s)</span>
+        </div>
+        <!-- ──────────────── -->
+
         <textarea id="teamNames" rows="10" placeholder="Team A&#10;Team B&#10;Team C"></textarea>
       </div>
 

@@ -151,12 +151,16 @@ function calculateLeagueTable(age) {
 
 
 function renderLeagueTable(age) {
+  const fixtures = tournamentData[age].fixtures || [];
+  const uniqueGroups = [...new Set(fixtures.map(f => f.group).filter(Boolean))];
+  const qualifyingSpots = uniqueGroups.length === 1 ? 4 : 2;
+
   const stats = calculateLeagueTable(age);
   tableBody.innerHTML = stats.length
     ? stats
         .map(
           (team, index) => `
-        <tr class="${index < 2 ? 'qualification-place' : ''}">
+        <tr class="${index < qualifyingSpots ? 'qualification-place' : ''}">
           <td>${team.team}</td>
           <td>${team.played}</td>
           <td>${team.won}</td>
@@ -354,14 +358,13 @@ function renderSemiFinals(age) {
 
   knockoutDiv.innerHTML = "";
 
-  // Calculate knockout fixtures from group standings
-  const groupAFixtures = fixtures.filter(f => f.group === "Group A");
-  const groupBFixtures = fixtures.filter(f => f.group === "Group B");
+// NEW — detects number of groups dynamically
+const uniqueGroups = [...new Set(fixtures.map(f => f.group).filter(Boolean))];
 
-  if (groupAFixtures.length === 0 || groupBFixtures.length === 0) {
-    knockoutDiv.innerHTML = "Knockout stages will appear once group games are complete.";
-    return;
-  }
+if (uniqueGroups.length === 0) {
+  knockoutDiv.innerHTML = "Knockout stages will appear once group games are complete.";
+  return;
+}
 
   const allGroupResultsComplete = fixtures.every(fixture =>
     results.some(result =>
@@ -402,8 +405,25 @@ function renderSemiFinals(age) {
     );
   };
 
-  const groupAStandings = calcStandings(groupAFixtures);
-  const groupBStandings = calcStandings(groupBFixtures);
+  // Derive seeding based on how many groups exist
+  let sf1Team1, sf1Team2, sf2Team1, sf2Team2;
+
+  if (uniqueGroups.length === 1) {
+    // Single group: top 4 qualify — 1st vs 4th, 2nd vs 3rd
+    const standings = calcStandings(fixtures.filter(f => f.group === uniqueGroups[0]));
+    sf1Team1 = standings[0]?.team || "TBD";
+    sf1Team2 = standings[3]?.team || "TBD";
+    sf2Team1 = standings[1]?.team || "TBD";
+    sf2Team2 = standings[2]?.team || "TBD";
+  } else {
+    // Two groups: A1 vs B2, B1 vs A2
+    const groupAStandings = calcStandings(fixtures.filter(f => f.group === "Group A"));
+    const groupBStandings = calcStandings(fixtures.filter(f => f.group === "Group B"));
+    sf1Team1 = groupAStandings[0]?.team || "TBD";
+    sf1Team2 = groupBStandings[1]?.team || "TBD";
+    sf2Team1 = groupBStandings[0]?.team || "TBD";
+    sf2Team2 = groupAStandings[1]?.team || "TBD";
+  }
 
   const knockoutResults = results.filter(r => r.type === "knockout");
   const semiFinal1 = knockoutResults.find(r => r.stage === "Semi Final 1");
@@ -432,11 +452,6 @@ function renderSemiFinals(age) {
         <span class="${winner === result.team2 ? 'winner' : ''}">${result.team2}</span>
       </div>`;
   };
-
-  const sf1Team1 = groupAStandings[0]?.team || "TBD";
-  const sf1Team2 = groupBStandings[1]?.team || "TBD";
-  const sf2Team1 = groupBStandings[0]?.team || "TBD";
-  const sf2Team2 = groupAStandings[1]?.team || "TBD";
 
   const finalWinner = getWinner(final);
   const finalTeam1 = semiFinal1 ? getWinner(semiFinal1) : "SF1 Winner";

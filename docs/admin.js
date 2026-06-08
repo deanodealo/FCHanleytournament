@@ -220,10 +220,9 @@ function calculateStandingsForFixtures(fixtures, results) {
 }
 
 function getKnockoutFixtures(fixtures, results) {
-  const groupAFixtures = fixtures.filter(fixture => fixture.group === "Group A");
-  const groupBFixtures = fixtures.filter(fixture => fixture.group === "Group B");
+  const uniqueGroups = [...new Set(fixtures.map(f => f.group).filter(Boolean))];
 
-  if (groupAFixtures.length === 0 || groupBFixtures.length === 0) {
+  if (uniqueGroups.length === 0) {
     return [];
   }
 
@@ -240,25 +239,52 @@ function getKnockoutFixtures(fixtures, results) {
     return [];
   }
 
-  const groupAStandings = calculateStandingsForFixtures(groupAFixtures, results);
-  const groupBStandings = calculateStandingsForFixtures(groupBFixtures, results);
+  let semiFinals;
 
-  if (groupAStandings.length < 2 || groupBStandings.length < 2) {
-    return [];
-  }
+  if (uniqueGroups.length === 1) {
+    const standings = calculateStandingsForFixtures(
+      fixtures.filter(f => f.group === uniqueGroups[0]), results
+    );
 
-  const semiFinals = [
-    {
-      stage: "Semi Final 1",
-      team1: groupAStandings[0].team,
-      team2: groupBStandings[1].team
-    },
-    {
-      stage: "Semi Final 2",
-      team1: groupBStandings[0].team,
-      team2: groupAStandings[1].team
+    if (standings.length < 4) {
+      return [];
     }
-  ];
+
+    semiFinals = [
+      {
+        stage: "Semi Final 1",
+        team1: standings[0].team,
+        team2: standings[3].team
+      },
+      {
+        stage: "Semi Final 2",
+        team1: standings[1].team,
+        team2: standings[2].team
+      }
+    ];
+  } else {
+    const groupAFixtures = fixtures.filter(f => f.group === "Group A");
+    const groupBFixtures = fixtures.filter(f => f.group === "Group B");
+    const groupAStandings = calculateStandingsForFixtures(groupAFixtures, results);
+    const groupBStandings = calculateStandingsForFixtures(groupBFixtures, results);
+
+    if (groupAStandings.length < 2 || groupBStandings.length < 2) {
+      return [];
+    }
+
+    semiFinals = [
+      {
+        stage: "Semi Final 1",
+        team1: groupAStandings[0].team,
+        team2: groupBStandings[1].team
+      },
+      {
+        stage: "Semi Final 2",
+        team1: groupBStandings[0].team,
+        team2: groupAStandings[1].team
+      }
+    ];
+  }
 
   const semiFinalResults = results.filter(result =>
     result.type === "knockout" &&

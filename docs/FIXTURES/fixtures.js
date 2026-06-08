@@ -2,12 +2,12 @@ import { saveFixtures, loadFixtures, saveResults, loadResults, saveTeams } from 
 import { database } from './firebase.js';
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Dynamically update group options based on the selected number of groups
   document.getElementById('number-of-groups').addEventListener('change', function () {
     const groupSelect = document.getElementById('group-select');
-    const numberOfGroups = parseInt(this.value, 10); // Get the number of groups selected
+    const numberOfGroups = parseInt(this.value, 10);
 
-    // Clear previous group options
+    if (!groupSelect) return;
+
     groupSelect.innerHTML = '<option value="all">All / Single Group</option>';
 
     // Add new group options dynamically
@@ -31,17 +31,42 @@ let scheduledFixtures = [];
 
 function updatePitchAssignmentUI(selectedAgeGroups, totalPitches) {
   const container = document.getElementById("pitchAssignments");
-  container.innerHTML = "";  // Clear existing pitch inputs
+  container.innerHTML = "";
 
   selectedAgeGroups.forEach(age => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <label>
-        ${age} → Pitches:
-        <input type="text" id="pitches-${age}" placeholder="e.g. 1,2,3" style="width: 100px;">
-      </label>
-    `;
-    container.appendChild(div);
+    const groupDiv = document.createElement("div");
+    groupDiv.style.marginBottom = "16px";
+
+    const groupLabel = document.createElement("div");
+    groupLabel.textContent = `${age} — Pitch Names`;
+    groupLabel.style.cssText = "font-size:0.85rem;font-weight:600;color:#a0b8d0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;";
+    groupDiv.appendChild(groupLabel);
+
+    const namesGrid = document.createElement("div");
+    namesGrid.style.cssText = "display:flex;flex-wrap:wrap;gap:10px;";
+    namesGrid.id = `pitch-names-${age}`;
+
+    for (let i = 1; i <= totalPitches; i++) {
+      const fieldDiv = document.createElement("div");
+      fieldDiv.style.cssText = "display:flex;flex-direction:column;gap:4px;";
+
+      const lbl = document.createElement("label");
+      lbl.textContent = `Pitch ${i}`;
+      lbl.style.cssText = "font-size:0.75rem;color:#7ec8ff;";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.id = `pitch-name-${age}-${i}`;
+      input.placeholder = `Pitch ${i}`;
+      input.style.cssText = "width:180px;padding:8px 10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:14px;";
+
+      fieldDiv.appendChild(lbl);
+      fieldDiv.appendChild(input);
+      namesGrid.appendChild(fieldDiv);
+    }
+
+    groupDiv.appendChild(namesGrid);
+    container.appendChild(groupDiv);
   });
 }
 
@@ -192,194 +217,6 @@ currentTime.setMinutes(currentTime.getMinutes() + timeIncrement);
 return scheduled;
 }
 
-
-// Generate fixtures function no longer calls updatePitchAssignmentUI
-async function generateFixtures() {
-  console.log('Generate Fixtures clicked!'); // Check if the function is triggered
-  let fixtures = [];
-
-  const ageGroupSelect = document.getElementById("ageGroup");
-  const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
-
-  const { day, session, ageGroup } = getSelectedTournamentPath();
-
-  const totalPitches = parseInt(document.getElementById("pitches").value);
-  const gameLength = parseInt(document.getElementById("matchLength").value);
-  const enableBreaks = document.getElementById("enableBreaks").checked;
-  const breakLength = parseInt(document.getElementById("breakLength").value) || 0;
-
-  const teamNamesRaw = document.getElementById("teamNames").value.trim();
-if (!teamNamesRaw) {
-  alert("Please enter team names.");
-  return;
-}
-
-const numberOfGroups = document.getElementById("number-of-groups").value;
-
-  const ageGroupTeams = {};
-
-  // Ensure teams are split by newline and filtered properly
-  const teams = teamNamesRaw
-    .split(/\r?\n/)
-    .map(team => team.trim())
-    .filter(team => team.length > 0);
-
-    const teamsPerGroup = Math.ceil(teams.length / numberOfGroups); // Calculate the number of teams per group
-
-let groups = [];
-for (let i = 0; i < numberOfGroups; i++) {
-  groups.push(teams.slice(i * teamsPerGroup, (i + 1) * teamsPerGroup)); // Split the teams into groups
-}
-
-console.log(groups); // Log the groups to check the output
-
-  console.log("Teams:", teams);  // Log the teams to ensure they're being processed correctly
-
-  if (teams.length < 2) {
-    alert("Please enter at least two teams.");
-    return;
-  }
-
-  // Process teams and allocate them to their respective age groups
-  selectedAgeGroups.forEach(ageGroup => {
-    ageGroupTeams[ageGroup] = teams;
-
-    console.log("Selected groups:", selectedAgeGroups);
-    console.log("Raw team names:", teamNamesRaw);
-    console.log("Parsed teams:", ageGroupTeams);
-  });
-
-  // Ensure allocated pitches are properly assigned
-  const pitchAllocations = {};
-
-  selectedAgeGroups.forEach(ageGroup => {
-    const input = document.getElementById(`pitches-${ageGroup}`);
-
-    // Ensure the pitch input exists
-    if (!input) {
-      alert(`Missing pitch input for ${ageGroup}.`);
-      return; // Exit if no input field exists for this age group
-    }
-
-    if (!input.value.trim()) {
-      alert(`Please assign at least one pitch to ${ageGroup}.`);
-      return; // Exit if no value is entered
-    }
-
-    const values = input.value
-      .split(',')
-      .map(s => parseInt(s.trim()))
-      .filter(n => !isNaN(n));
-
-    if (values.length === 0) {
-      alert(`Please assign at least one valid pitch number to ${ageGroup}.`);
-      return; // Exit if no valid pitch is entered
-    }
-
-    for (let pitch of values) {
-      if (pitch < 1 || pitch > totalPitches) {
-        alert(`Pitch ${pitch} is out of range (1–${totalPitches}).`);
-        return; // Exit if the pitch number is out of range
-      }
-    }
-
-    // Assign pitch values to the corresponding age group
-    pitchAllocations[ageGroup] = values;
-  });
-
-  // Ensure that allocated pitches are defined for each selected age group
-  selectedAgeGroups.forEach(ageGroup => {
-    if (!pitchAllocations[ageGroup]) {
-      alert(`Allocated pitches for ${ageGroup} are not defined.`);
-      return; // Exit if allocated pitches are not defined for the current age group
-    }
-  });
-
-  selectedAgeGroups.forEach(ageGroup => {
-  const teamsInGroup = ageGroupTeams[ageGroup];
-
-  // Validate teams before generating fixtures
-  if (teamsInGroup.length < 2) {
-    alert(`There are not enough teams in the ${ageGroup} group to generate fixtures.`);
-    return; // Exit if there are not enough teams for the selected age group
-  }
-
-let groupFixtures = [];
-let groupCount = 0; // Start from 0 so it works dynamically with multiple groups
-
-for (let i = 0; i < numberOfGroups; i++) {
-  const groupTeams = teamsInGroup.slice(i * Math.ceil(teamsInGroup.length / numberOfGroups), (i + 1) * Math.ceil(teamsInGroup.length / numberOfGroups));
-
-  if (groupTeams.length < 2) continue;
-
-  const groupName = `Group ${String.fromCharCode(65 + groupCount)}`; // Dynamically create group names like Group A, Group B, etc.
-  const generatedFixtures = generateRoundRobin(groupTeams).map(f => ({
-    group: groupName,
-    match: f.match,
-    round: f.round
-  }));
-
-  groupFixtures.push(...generatedFixtures);
-  groupCount++;  // Move to the next group name (Group A, Group B, etc.)
-}
-
-  fixtures.push(...groupFixtures);
-});
-
-  console.log("All Generated Fixtures:", fixtures); // Check if fixtures are generated
-
-  if (fixtures.length === 0) {
-    alert("No fixtures generated. Please check team input.");
-    return; // Exit if no fixtures were generated
-  }
-
-  const groupPitchMap = {
-  "Group A": pitchAllocations[ageGroup][0],
-  "Group B": pitchAllocations[ageGroup][1] || pitchAllocations[ageGroup][0]
-};
-
-  const scheduledAll = [];
-  const globalPitchSchedule = {}; 
-  const currentAgeGroup = selectedAgeGroups[0];
-const allocatedPitches = pitchAllocations[currentAgeGroup];
-
-  const startTimeInput = document.getElementById('startTime').value || "09:00";
-  const [startHour, startMinute] = startTimeInput.split(":").map(Number);
-
-  const groupStartTime = new Date();
-  groupStartTime.setHours(startHour, startMinute, 0, 0);
-
-  const scheduled = scheduleMatchTimes(
-  fixtures,
-  allocatedPitches.length,
-  gameLength,
-  enableBreaks,
-  breakLength,
-  allocatedPitches,
-  groupStartTime,
-  globalPitchSchedule,
-  groupPitchMap   // 👈 NEW
-);
-
-  await saveTeams(`${day}/${session}/${currentAgeGroup}`, teams);
-await saveFixtures(`${day}/${session}/${currentAgeGroup}`, scheduled);
-
-scheduledAll.push({ ageGroup: currentAgeGroup, scheduled, teams });
-
-  document.getElementById("fixtureList").innerHTML = "";
-
-  for (const { ageGroup, scheduled, teams } of scheduledAll) {
-    const groupHeader = document.createElement("h3");
-    groupHeader.textContent = `Fixtures for ${ageGroup}`;
-    document.getElementById("fixtureList").appendChild(groupHeader);
-    displayFixtures(scheduled);
-  }
-
-  alert("Fixtures generated and saved for all selected age groups.");
-  scheduledFixtures = scheduledAll.flatMap(g => g.scheduled);
-}
-
-// Round-robin fixture generator (this is the correct one)
 function generateRoundRobin(teams) {
   const teamList = teams.length % 2 === 0 ? [...teams] : [...teams, null];
   const size = teamList.length;
@@ -402,6 +239,168 @@ function generateRoundRobin(teams) {
     }
   }
   return fixtures;
+}
+
+async function generateFixtures() {
+  console.log('Generate Fixtures clicked!');
+  let fixtures = [];
+
+  const ageGroupSelect = document.getElementById("ageGroup");
+  const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
+
+  const { day, session, ageGroup } = getSelectedTournamentPath();
+
+  const totalPitches = parseInt(document.getElementById("pitches").value);
+  const gameLength = parseInt(document.getElementById("matchLength").value);
+  const enableBreaks = document.getElementById("enableBreaks").checked;
+  const breakLength = parseInt(document.getElementById("breakLength").value) || 0;
+
+  const teamNamesRaw = document.getElementById("teamNames").value.trim();
+  if (!teamNamesRaw) {
+    alert("Please enter team names.");
+    return;
+  }
+
+  const numberOfGroups = document.getElementById("number-of-groups").value;
+
+  const ageGroupTeams = {};
+
+  const teams = teamNamesRaw
+    .split(/\r?\n/)
+    .map(team => team.trim())
+    .filter(team => team.length > 0);
+
+  const teamsPerGroup = Math.ceil(teams.length / numberOfGroups);
+
+  let groups = [];
+  for (let i = 0; i < numberOfGroups; i++) {
+    groups.push(teams.slice(i * teamsPerGroup, (i + 1) * teamsPerGroup));
+  }
+
+  console.log(groups);
+  console.log("Teams:", teams);
+
+  if (teams.length < 2) {
+    alert("Please enter at least two teams.");
+    return;
+  }
+
+  selectedAgeGroups.forEach(ageGroup => {
+    ageGroupTeams[ageGroup] = teams;
+  });
+
+  // Build pitch allocations from named pitch inputs
+  const pitchAllocations = {};
+
+  selectedAgeGroups.forEach(ageGroup => {
+    const pitchNames = [];
+    for (let i = 1; i <= totalPitches; i++) {
+      const nameInput = document.getElementById(`pitch-name-${ageGroup}-${i}`);
+      const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : `Pitch ${i}`;
+      pitchNames.push(name);
+    }
+    if (pitchNames.length === 0) {
+      alert(`No pitches found for ${ageGroup}. Please select the age group first.`);
+      return;
+    }
+    pitchAllocations[ageGroup] = pitchNames;
+  });
+
+  // Ensure allocations exist for all selected age groups
+  for (const ageGroup of selectedAgeGroups) {
+    if (!pitchAllocations[ageGroup]) {
+      alert(`Allocated pitches for ${ageGroup} are not defined.`);
+      return;
+    }
+  }
+
+  selectedAgeGroups.forEach(ageGroup => {
+    const teamsInGroup = ageGroupTeams[ageGroup];
+
+    if (teamsInGroup.length < 2) {
+      alert(`There are not enough teams in the ${ageGroup} group to generate fixtures.`);
+      return;
+    }
+
+    let groupFixtures = [];
+    let groupCount = 0;
+
+    for (let i = 0; i < numberOfGroups; i++) {
+      const groupTeams = teamsInGroup.slice(
+        i * Math.ceil(teamsInGroup.length / numberOfGroups),
+        (i + 1) * Math.ceil(teamsInGroup.length / numberOfGroups)
+      );
+
+      if (groupTeams.length < 2) continue;
+
+      const groupName = `Group ${String.fromCharCode(65 + groupCount)}`;
+      const generatedFixtures = generateRoundRobin(groupTeams).map(f => ({
+        group: groupName,
+        match: f.match,
+        round: f.round
+      }));
+
+      groupFixtures.push(...generatedFixtures);
+      groupCount++;
+    }
+
+    fixtures.push(...groupFixtures);
+  });
+
+  console.log("All Generated Fixtures:", fixtures);
+
+  if (fixtures.length === 0) {
+    alert("No fixtures generated. Please check team input.");
+    return;
+  }
+
+  const currentAgeGroup = selectedAgeGroups[0];
+  const allocatedPitches = pitchAllocations[currentAgeGroup];
+
+  // Map groups to pitch names
+  const groupPitchMap = {};
+  allocatedPitches.forEach((pitchName, index) => {
+    const groupName = `Group ${String.fromCharCode(65 + index)}`;
+    groupPitchMap[groupName] = pitchName;
+  });
+
+  const scheduledAll = [];
+  const globalPitchSchedule = {};
+
+  const startTimeInput = document.getElementById('startTime').value || "09:00";
+  const [startHour, startMinute] = startTimeInput.split(":").map(Number);
+
+  const groupStartTime = new Date();
+  groupStartTime.setHours(startHour, startMinute, 0, 0);
+
+  const scheduled = scheduleMatchTimes(
+    fixtures,
+    allocatedPitches.length,
+    gameLength,
+    enableBreaks,
+    breakLength,
+    allocatedPitches,
+    groupStartTime,
+    globalPitchSchedule,
+    groupPitchMap
+  );
+
+  await saveTeams(`${day}/${session}/${currentAgeGroup}`, teams);
+  await saveFixtures(`${day}/${session}/${currentAgeGroup}`, scheduled);
+
+  scheduledAll.push({ ageGroup: currentAgeGroup, scheduled, teams });
+
+  document.getElementById("fixtureList").innerHTML = "";
+
+  for (const { ageGroup, scheduled, teams } of scheduledAll) {
+    const groupHeader = document.createElement("h3");
+    groupHeader.textContent = `Fixtures for ${ageGroup}`;
+    document.getElementById("fixtureList").appendChild(groupHeader);
+    displayFixtures(scheduled);
+  }
+
+  alert("Fixtures generated and saved for all selected age groups.");
+  scheduledFixtures = scheduledAll.flatMap(g => g.scheduled);
 }
 
 function formatTime(isoString) {
@@ -449,7 +448,7 @@ function displayFixtures(fixtures) {
     // Display fixtures for this group
     groupFixtures.forEach(fixture => {
       const fixtureDiv = document.createElement("div");
-      fixtureDiv.textContent = `${formatTime(fixture.time)} | Pitch ${fixture.pitch} | ${fixture.team1} vs ${fixture.team2}`;
+      fixtureDiv.textContent = `${formatTime(fixture.time)} | ${fixture.pitch} | ${fixture.team1} vs ${fixture.team2}`;
       groupSection.appendChild(fixtureDiv);
     });
 
@@ -473,7 +472,7 @@ function displayFixtures(fixtures) {
       const opponent = fixture.team1 === team ? fixture.team2 : fixture.team1;
 
       const matchDiv = document.createElement("div");
-      matchDiv.textContent = `${formatTime(fixture.time)} | Pitch ${fixture.pitch} vs ${opponent}`;
+      matchDiv.textContent = `${formatTime(fixture.time)} | ${fixture.pitch} vs ${opponent}`;
       teamDiv.appendChild(matchDiv);
     });
 
@@ -490,4 +489,128 @@ document.getElementById('ageGroup').addEventListener('change', function() {
   const selectedAgeGroups = Array.from(this.selectedOptions).map(opt => opt.value);
   const totalPitches = parseInt(document.getElementById("pitches").value);
   updatePitchAssignmentUI(selectedAgeGroups, totalPitches);
+});
+
+document.getElementById('pitches').addEventListener('change', function() {
+  const selectedAgeGroups = Array.from(document.getElementById('ageGroup').selectedOptions).map(opt => opt.value);
+  const totalPitches = parseInt(this.value);
+  if (selectedAgeGroups.length > 0) {
+    updatePitchAssignmentUI(selectedAgeGroups, totalPitches);
+  }
+});
+
+
+// ─────────────────────────────────────────────
+// CSV IMPORT  (Registration CSV → Team Names)
+// ─────────────────────────────────────────────
+
+/**
+ * Parse a single CSV row, handling quoted fields that may contain commas.
+ */
+function parseCSVRow(row) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < row.length; i++) {
+    const ch = row[i];
+    if (ch === '"') {
+      if (inQuotes && row[i + 1] === '"') {
+        // Escaped double-quote inside a quoted field
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+/**
+ * Read the uploaded CSV, filter by the age group(s) currently selected
+ * in the fixture generator, and populate the Team Names textarea.
+ */
+function importFromCSV(file) {
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+
+    if (lines.length < 2) {
+      alert("The CSV file appears to be empty.");
+      return;
+    }
+
+    // Locate required columns
+    const headers = parseCSVRow(lines[0]).map(h => h.trim());
+    const teamNameIdx = headers.indexOf("Team Name");
+    const ageGroupIdx = headers.indexOf("Age Group");
+
+    if (teamNameIdx === -1 || ageGroupIdx === -1) {
+      alert(
+        "This doesn't look like an FC Hanley registration CSV.\n" +
+        "Please export it from the Admin Registrations page and try again."
+      );
+      return;
+    }
+
+    // Which age group(s) are selected in the fixture generator?
+    const ageGroupSelect = document.getElementById("ageGroup");
+    const selectedAgeGroups = Array.from(ageGroupSelect.selectedOptions).map(opt => opt.value);
+
+    if (selectedAgeGroups.length === 0) {
+      alert("Please select at least one age group in the fixture settings first.");
+      return;
+    }
+
+    // Filter rows and collect team names
+    const teams = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const row = parseCSVRow(lines[i]);
+      const ageGroup = (row[ageGroupIdx] || "").trim();
+      const teamName = (row[teamNameIdx] || "").trim();
+      if (teamName && selectedAgeGroups.includes(ageGroup)) {
+        teams.push(teamName);
+      }
+    }
+
+    if (teams.length === 0) {
+      alert(
+        `No teams found for ${selectedAgeGroups.join(", ")} in this CSV.\n` +
+        "Check that the age group selection matches the registrations."
+      );
+      return;
+    }
+
+    document.getElementById("teamNames").value = teams.join("\n");
+    alert(`✅ Imported ${teams.length} team(s) for ${selectedAgeGroups.join(", ")}.`);
+  };
+
+  reader.onerror = function () {
+    alert("Could not read the file. Please try again.");
+  };
+
+  reader.readAsText(file);
+}
+
+// Wire up the Import button and hidden file input
+document.getElementById("importCsvBtn").addEventListener("click", () => {
+  document.getElementById("csvImportInput").click();
+});
+
+document.getElementById("csvImportInput").addEventListener("change", function () {
+  if (this.files && this.files[0]) {
+    importFromCSV(this.files[0]);
+    // Reset so the same file can be re-imported after a change
+    this.value = "";
+  }
 });
