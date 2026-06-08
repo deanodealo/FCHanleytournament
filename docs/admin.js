@@ -694,6 +694,7 @@ const currentAgeGroup = ageGroupSelect.value;
 await renderFixtures(currentAgeGroup);
 await renderResults(currentAgeGroup);
 await updateLeagueTable(currentAgeGroup);
+await new Promise(resolve => setTimeout(resolve, 500));
 await populateEditResultDropdown();
 });
 
