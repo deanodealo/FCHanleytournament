@@ -5,21 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FC Hanley 5aSide Tournament</title>
   <link rel="stylesheet" href="styles.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <img src="images/fun5.jpg" alt="" class="bg-overlay" />
+
+  <div class="bg-blur"></div>
 
   <header>
-    <div class="banner-images">
-      <img src="images/festival image.png" alt="FC Hanley Logo" class="logo">
+    <div class="header-inner">
+      <img src="images/festival image.png" alt="FC Hanley Will Brazier Festival" class="logo">
     </div>
   </header>
 
-  <!-- Controls bar — selects ONLY -->
+  <!-- Controls bar -->
   <div class="public-controls">
-    <p class="controls-title">Select below to view your fixtures and results</p>
-
+    <p class="controls-title">Select your age group to view fixtures &amp; results</p>
     <div class="controls-row">
       <div class="control-item">
         <label for="day-select">Day</label>
@@ -28,7 +28,6 @@
           <option value="day2">Sunday</option>
         </select>
       </div>
-
       <div class="control-item">
         <label for="session-select">Session</label>
         <select id="session-select">
@@ -36,7 +35,6 @@
           <option value="pm">PM</option>
         </select>
       </div>
-
       <div class="control-item">
         <label for="age-group-select">Age Group</label>
         <select id="age-group-select">
@@ -49,11 +47,9 @@
           <option value="U13">U13</option>
         </select>
       </div>
-
       <div class="control-item">
         <label for="group-select">Group</label>
         <select id="group-select">
-          <!--<option value="all">All / Single Group</option>-->
           <option value="Group A">Group A</option>
           <option value="Group B">Group B</option>
         </select>
@@ -61,39 +57,53 @@
     </div>
   </div>
 
-  <!-- Main content — OUTSIDE the controls bar -->
+  <!-- Main content -->
   <div class="main-content mobile-tournament-layout">
 
-    <section class="card league-table">
-      <h2 id="age-group-header">League Table</h2>
-      <table id="table">
-        <thead>
-          <tr>
-            <th>Team</th>
-            <th>P</th>
-            <th>W</th>
-            <th>D</th>
-            <th>L</th>
-            <th>GD</th>
-            <th>PTS</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <section class="card league-table-card">
+      <div class="card-header">
+        <span class="card-eyebrow">Standings</span>
+        <h2 id="age-group-header">League Table</h2>
+      </div>
+      <div class="table-wrap">
+        <table id="table">
+          <thead>
+            <tr>
+              <th class="team-col">Team</th>
+              <th>P</th>
+              <th>W</th>
+              <th>D</th>
+              <th>L</th>
+              <th>GD</th>
+              <th>PTS</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
-    <section class="card fixtures-results">
-      <h2>Fixtures</h2>
+    <section class="card fixtures-card">
+      <div class="card-header">
+        <span class="card-eyebrow">Up Next</span>
+        <h2>Fixtures</h2>
+      </div>
       <ul id="fixtures-list"></ul>
     </section>
 
-    <section class="card fixtures-results">
-      <h2>Results</h2>
+    <section class="card results-card">
+      <div class="card-header">
+        <span class="card-eyebrow">Full Time</span>
+        <h2>Results</h2>
+      </div>
       <ul id="results-list"></ul>
     </section>
 
-    <section class="card fixtures-results knockout-card">
-      <h2>Knockout Stages</h2>
+    <section class="card knockout-card">
+      <div class="card-header">
+        <span class="card-eyebrow">🏆 Knockout</span>
+        <h2>Knockout Stages</h2>
+      </div>
       <div id="knockout-display">
         Semi-finals and final will appear here once group games are complete.
       </div>
@@ -101,11 +111,10 @@
 
   </div>
 
-
-<footer>
-Proudly raising funds for the Douglas Macmillan Cancer Support Charity <br>
-  <img src="images/dugmac.png" alt="DougieMac" style="height: 50px; margin-top: 10px; background: white; border-radius: 6px; padding: 4px 10px;">
-</footer>
+  <footer>
+    <p>Proudly raising funds for</p>
+    <img src="images/dugmac.png" alt="Douglas Macmillan Cancer Support" class="footer-logo">
+  </footer>
 
   <script type="module" src="homepage.js"></script>
 </body>

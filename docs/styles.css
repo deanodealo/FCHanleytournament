@@ -1,4 +1,21 @@
 /* ============================= */
+/*      CSS Variables           */
+/* ============================= */
+:root {
+  --navy:        #0a1628;
+  --navy-mid:    #0f2444;
+  --navy-card:   #132038;
+  --blue:        #0057b8;
+  --blue-light:  #00a8ff;
+  --gold:        #f0a500;
+  --white:       #ffffff;
+  --off-white:   #e8eef5;
+  --text-muted:  #7a9ab8;
+  --border:      rgba(0, 168, 255, 0.15);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================= */
 /*      Global Reset            */
 /* ============================= */
 * {
@@ -11,48 +28,55 @@
 /*      Body & Background       */
 /* ============================= */
 body {
-  position: relative;
-  font-family: 'Roboto', sans-serif;
-  background: url('images/backnew.jpeg') no-repeat center center fixed;
-  background-size: cover;
-  color: #fff;
-  text-align: center;
-  padding: 20px 0;
-  line-height: 1.4;
+  font-family: 'Barlow', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  padding: 0 0 40px;
   overflow-x: hidden;
+  position: relative;
 }
 
-body::before {
+.bg-blur {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(0, 87, 184, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(0, 168, 255, 0.15) 0%, transparent 60%),
+    url('images/backnew.jpeg') center center / cover no-repeat;
+  z-index: -1;
+  opacity: 0.5;
+}
+
+body::after {
   content: "";
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: none;
+  inset: 0;
+  background: rgba(10, 22, 40, 0.82);
   z-index: -1;
+  pointer-events: none;
 }
 
 /* ============================= */
-/*      Header / Logo           */
+/*      Header                  */
 /* ============================= */
 header {
+  padding: 24px 20px 16px;
   text-align: center;
-  margin-bottom: 20px;
 }
 
-.banner-images {
+.header-inner {
   display: flex;
   justify-content: center;
-  align-items: center;
 }
 
 .logo {
-  width: min(550px, 90%);
+  width: min(520px, 88%);
   height: auto;
-  border-radius: 15px;
+  border-radius: 14px;
   display: block;
   margin: 0 auto;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  filter: drop-shadow(0 4px 24px rgba(0, 168, 255, 0.25));
 }
 
 /* ============================= */
@@ -60,18 +84,22 @@ header {
 /* ============================= */
 .public-controls {
   width: min(900px, 94%);
-  margin: 0 auto 20px;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.374);
-  border-radius: 14px;
+  margin: 0 auto 24px;
+  padding: 18px 20px;
+  background: rgba(15, 36, 68, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
 }
 
 .controls-title {
   text-align: center;
-  font-weight: 600;
-  margin-bottom: 12px;
-  font-size: 1rem;
-  color: #fff;
+  font-weight: 500;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .controls-row {
@@ -83,28 +111,47 @@ header {
 .control-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  text-align: left;
+  gap: 5px;
 }
 
 .control-item label {
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #fff;
+  font-size: 0.7rem;
+  color: var(--blue-light);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 .control-item select {
   width: 100%;
   padding: 10px 12px;
-  font-size: 15px;
+  font-size: 14px;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 600;
   border-radius: 10px;
-  border: 1px solid #ccc;
-  background: #fff;
-  color: #003366;
+  border: 1px solid rgba(0, 168, 255, 0.25);
+  background: rgba(10, 22, 40, 0.8);
+  color: var(--white);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300a8ff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.control-item select:focus {
+  outline: none;
+  border-color: var(--blue-light);
+}
+
+.control-item select option {
+  background: var(--navy-mid);
+  color: var(--white);
 }
 
 /* ============================= */
-/*      Main Content Grid       */
+/*      Main Grid               */
 /* ============================= */
 .mobile-tournament-layout {
   width: min(1100px, 94%);
@@ -118,141 +165,228 @@ header {
 /*      Cards                   */
 /* ============================= */
 .card {
-  background: rgba(255, 255, 255, 0.447);
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 87, 184, 0.12);
+}
+
+.card-eyebrow {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--blue-light);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  margin-bottom: 3px;
 }
 
 .card h2 {
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #222;
-  margin: 0 0 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--white);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  text-align: center;
+  letter-spacing: 1px;
+  line-height: 1;
 }
 
 /* ============================= */
 /*      League Table            */
 /* ============================= */
+.table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+
 #table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  color: #222;
+  font-size: 13px;
+  color: var(--white);
 }
 
-#table th,
-#table td {
-  padding: 8px 6px;
-  text-align: center;
+#table thead tr {
+  background: rgba(0, 87, 184, 0.2);
 }
 
 #table th {
-  background-color: #fff;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.65rem;
   font-weight: 700;
-  border-bottom: 2px solid #ddd;
-  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+#table th.team-col {
+  text-align: left;
+  padding-left: 16px;
 }
 
 #table td {
-  border-bottom: 1px solid #eee;
+  padding: 11px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+#table td:first-child {
+  text-align: left;
+  padding-left: 16px;
+  font-weight: 600;
+  color: var(--off-white);
 }
 
 #table tr:last-child td {
   border-bottom: none;
 }
 
-#table tr:hover td {
-  background-color: #f9f9f9;
+#table tbody tr:hover td {
+  background: rgba(0, 168, 255, 0.06);
+}
+
+#table tr.qualification-place td {
+  background: rgba(0, 168, 255, 0.07);
+}
+
+#table tr.qualification-place td:first-child {
+  border-left: 3px solid var(--blue-light);
+  padding-left: 13px;
+}
+
+/* Points column highlight */
+#table td:last-child {
+  font-weight: 700;
+  color: var(--blue-light);
 }
 
 /* ============================= */
-/*      Fixtures & Results      */
+/*   Fixtures & Results Lists   */
 /* ============================= */
 #fixtures-list,
 #results-list {
   list-style: none;
-  padding: 0;
+  padding: 10px 12px;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 #fixtures-list li,
 #results-list li {
-  padding: 10px;
-  margin: 6px 0;
-  border-bottom: 1px solid rgba(0,51,102,0.15);
-  text-align: center;
-  font-size: 0.95rem;
-  color: #003366;
-  background: rgba(255,255,255,0.7);
-  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: var(--off-white);
+  line-height: 1.5;
 }
 
-#fixtures-list li:last-child,
-#results-list li:last-child {
-  border-bottom: none;
+#fixtures-list li strong,
+#results-list li strong {
+  color: var(--white);
+  font-weight: 700;
+}
+
+#fixtures-list li em,
+#results-list li em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 3px;
+}
+
+/* Score highlight in results */
+#results-list li {
+  position: relative;
 }
 
 /* ============================= */
 /*      Knockout Stages         */
 /* ============================= */
 #knockout-display {
-  color: #333;
-  font-size: 0.95rem;
-}
-
-.knockout-card {
-  color: #333;
+  padding: 14px 16px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
 }
 
 .knockout-match {
-  padding: 10px;
-  margin-bottom: 8px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 10px;
+  margin: 6px 0;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   text-align: center;
   font-size: 14px;
-  color: #333;
+  color: var(--off-white);
+}
+
+.knockout-match strong {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--blue-light);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
 }
 
 .final-match {
-  font-size: 16px;
-  font-weight: bold;
-  border: 2px solid #4CAF50;
+  border-color: var(--gold);
+  background: rgba(240, 165, 0, 0.07);
+}
+
+.final-match strong {
+  color: var(--gold);
 }
 
 .knockout-divider {
   text-align: center;
-  margin: 12px 0 6px;
-  font-weight: bold;
-  font-size: 16px;
-  color: #222;
+  margin: 10px 0 4px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .winner {
-  font-weight: bold;
-  color: #2e7d32;
+  font-weight: 800;
+  color: var(--blue-light);
+}
+
+.final-match .winner {
+  color: var(--gold);
 }
 
 .winner-banner {
   margin-top: 12px;
-  padding: 10px;
-  background: #4CAF50;
-  color: white;
-  font-weight: bold;
-  border-radius: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--gold), #ffcc44);
+  color: var(--navy);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 1.2rem;
+  border-radius: 12px;
   text-align: center;
-  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* ============================= */
@@ -260,34 +394,25 @@ header {
 /* ============================= */
 footer {
   max-width: 1100px;
-  margin: 0 auto 20px;
-  padding: 0 20px;
+  margin: 0 auto;
+  padding: 20px;
   text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
-.auto-cycle-toggle {
-  display: inline-block;
-  padding: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #fff;
-}
-
-/* ============================= */
-/*      BG Overlay Image        */
-/* ============================= */
-.bg-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  pointer-events: none;
-  z-index: -1;
-  object-fit: cover;
-  opacity: 0.3;
+.footer-logo {
+  height: 44px;
+  margin-top: 10px;
+  background: white;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: block;
+  margin: 10px auto 0;
 }
 
 /* ============================= */
-/*      Tablet (2-col grid)     */
+/*      Tablet 2-col            */
 /* ============================= */
 @media (min-width: 600px) {
   .controls-row {
@@ -301,24 +426,27 @@ footer {
   .knockout-card {
     grid-column: 1 / -1;
   }
+
+  .card h2 {
+    font-size: 1.8rem;
+  }
 }
 
 /* ============================= */
-/*      Desktop tweaks          */
+/*      Desktop                 */
 /* ============================= */
 @media (min-width: 900px) {
-  .card h2 {
-    font-size: 1.6rem;
-  }
-
   #table {
-    font-size: 15px;
+    font-size: 14px;
   }
 
-  #table th, #table td {
-    padding: 10px 8px;
+  #table th,
+  #table td {
+    padding: 12px 10px;
   }
-}
-#table tr.qualification-place td {
-  background-color: rgba(46, 125, 50, 0.15);
+
+  #table th.team-col,
+  #table td:first-child {
+    padding-left: 20px;
+  }
 }
