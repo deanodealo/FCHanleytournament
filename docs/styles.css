@@ -450,3 +450,41 @@ footer {
     padding-left: 20px;
   }
 }
+
+/* ============================= */
+/*      Footer Back Link        */
+/* ============================= */
+.footer-back {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.2s;
+}
+
+.footer-back-link:hover {
+  color: var(--white);
+}
+
+.footer-badge {
+  height: 36px;
+  width: auto;
+  border-radius: 50%;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+.footer-back-link:hover .footer-badge {
+  opacity: 1;
+}
